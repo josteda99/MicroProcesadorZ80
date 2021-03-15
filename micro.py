@@ -1,3 +1,7 @@
-var = "hola github"
+#ALU
+#ACU
+#control Section
+#mux
 
-print(var)
+
+
