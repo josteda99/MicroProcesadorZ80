@@ -1,37 +1,21 @@
-# ALU
-    # sumar
-    # restar
-    # AND
-    # OR
-    # XOR
-    # comparar
-    # desplazar bit der
-    # desplazar bit izq
-    # rotar
-    # incremento
-    # decremento
-    # set_bit
-# Escribir
-# leer
-# memoria como Array? Hash?
-# jumpers
-# ACU
-# Mux
-# paro
-# espera
-# requision de interrupcion mascarable
-# interrupcion no mascaro
-# reset
-# reloj
+import Componente as com
 
-var1 = int (input("entero1\n"), base=2)
+alu = com.ALU()
 
-var2 = int (input("entero2\n"), base=2)
+flags = [0 for _ in range(8)]
 
-var3 = var1 + var2
+print(alu.add(0b11001010, 0b11100011, flags))
 
-s_var = bin (var3)
-c = s_var.split('b')
+print(flags)
 
-print(c, type(c))
+# var1 = int (input("entero1\n"), base=2)
+
+# var2 = int (input("entero2\n"), base=2)
+
+# var3 = var1 + var2
+
+# s_var = bin (var3)
+# c = s_var.split('b')
+
+# print(c, type(c))
 # print(bin(var3), var3)
