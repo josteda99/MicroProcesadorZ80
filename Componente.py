@@ -8,31 +8,34 @@ class ALU(object):
         suma = a + b
         suma_separada = str(suma).split('b')
         if suma_separada[1].len > 8:
+            print("Not supported yet")
             # flags = 
         return suma
 
     def sub(a, b, flags):
-        
+        print("Not supported yet")
+
     def and_logic(a, b, flags):
-        
+        print("Not supported yet")
 
     def or_logic(a, b, flags):
-        
+        print("Not supported yet")
 
     def xor_logic(a, b, flags):
-        
+        print("Not supported yet")
 
     def compare(a, b):
         # Funcion que rotornaria las banderas respctivas para la operacion echa
+        print("Not supported yet")
 
-    def left_right_bit_Switch(a, b):
-        
+    def lr_bit_switch(a, b):
+        print("Not supported yet")
 
     def increment(a):
-        
+        print("Not supported yet")
 
     def decrement(a):
-        print("No supported yet")
+        print("Not supported yet")
 
 class Register(object):
     def __init__(self, *args):
