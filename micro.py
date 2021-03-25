@@ -1,12 +1,12 @@
 import Componente as com
+import numpy as np
 
 alu = com.ALU()
-
+num1 = np.int8(-71)
+num2 = np.int8(-114)
 flags = [0 for _ in range(8)]
 
-print(alu.add(0b11001010, 0b11100011, flags))
-
-print(flags)
+print(alu.and_logic(num1, num2, flags))
 
 # var1 = int (input("entero1\n"), base=2)
 

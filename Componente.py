@@ -1,41 +1,62 @@
+import numpy as np
+import warnings
+warnings.simplefilter("always")
+
 class ALU(object):
     
-    __ZERO = bin(0)
+    __ZERO = 0
     __SIGN_BIT = 1 << 7
 
     def __init__(self):
         super(ALU, self).__init__()
 
     def add(self, a, b, flags):
-        # Vamos a recibir los valores en '1010101'
-        suma = a + b
-        suma_separada = str(bin(suma)).split('b')
-        flags[0] = 1 if len(suma_separada[1]) > 8 else 0 
-        flags[1] = 1
-        flags[6] = 0 if suma != self.__ZERO else 1
-        flags[7] = 1 if suma_separada[1][3] == 1 else 0
-        flags[2] = 1 if (a & self.__SIGN_BIT) == (b & self.__SIGN_BIT) and ((suma & self.__SIGN_BIT) & (a & self.__SIGN_BIT)) else 0
+        # Los valores son de tipo int8 de numpy
+        suma = 0
+        with warnings.catch_warnings(record=True,) as w:
+            suma = a + b
+            str_sum = np.binary_repr(suma, 8)
+            flags[1] = flags[4] = 0
+            flags[0] = 1 if len(w) > 0 else 0
+            flags[7] = 1 if str_sum[0] == '1' else 0 
+            flags[6] = 0 if suma != self.__ZERO else 1 
+            flags[2] = 1 if (a & self.__SIGN_BIT) == (b & self.__SIGN_BIT) and ((suma & self.__SIGN_BIT) != (a & self.__SIGN_BIT)) else 0
         return suma
 
     def sub(self, a, b, flags):
-        resta = a - b
-        resta_separada = str(resta).split('b')
-        # if(resta_separada[1].len > 8):
-        return resta
+        with warnings.catch_warnings(record=True) as w:
+            subt = a - b
+            str_sub = np.binary_repr(subt, 8)
+            flags[1] = flags[4] = 1
+            flags[0] = 1 if len(w) > 0 else 0
+            flags[7] = 1 if str_sub[0] == '1' else 0
+            flags[6] = 0 if subt != self.__ZERO else 1
+            flags[2] = 1 if(a & self.__SIGN_BIT) != (b & self.__SIGN_BIT) else 0
+        return subt
 
     def and_logic(self ,a, b, flags):
-        result = a and b
-        print(result)
+        result = a & b
+        flags[0] = 0
+        flags[1] = flags[4] = 1
+        flags[7] = 1 if result[0] == '1' else 0
+        flags[6] = 0 if result != self.__ZERO else 1
         return result
 
     def or_logic(self, a, b, flags):
         result = a or b
-        # print(result)
+        flags[0] = 0
+        flags[1] = flags[4] = 1
+        flags[7] = 1 if result[0] == '1' else 0
+        flags[6] = 0 if result != self.__ZERO else 1
         return result
 
 
     def xor_logic(self, a, b, flags):
-        result = bool(a) != bool(b)
+        result = a ^ b
+        flags[0] = 0
+        flags[1] = flags[4] = 1
+        flags[7] = 1 if result[0] == '1' else 0
+        flags[6] = 0 if result != self.__ZERO else 1
         return result
 
 
@@ -70,14 +91,10 @@ class ALU(object):
 class Register(object):
     def __init__(self, bits):
         self.len = bits
-        self.register = []
+        self.rgt = []
         
     def get_register(self):
-        print("a")
-    # def register():
-        
-    # def write():
-    
+        return self.rgt
 
 class Memory(object):
     
