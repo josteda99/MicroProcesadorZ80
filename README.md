@@ -21,11 +21,11 @@ Funciones a emular
 
 ## Registros
 **Registros acumuladores y flag**, cada flag esta implementado comoun registro con la siguiente distribbución: _**flag[6]**: ZERO_, _**flag[7]**: Sign_, _**flag[0]**: Carry_, _**flag[2]**: OverFlow_, _**flag[1] y flag[4]**: N (ultima operacion una suma '0' o resta '1')_; estos registros son de 8-bit sacumulador y Flag respectivamente .
-- A, F (Principales)
-- A', F'
-Posee **registors de propocito general** los cuales son implementados para realizar operaciones con el registro acumulador y _flag_ que se encuentre activo, estos resgistros son de 8-bits. 
-- B, C, D, E, H, L
-- B', C', D', H', L'
+- AC, F (Principales)
+- AC', F'
+
+Solo se implementaran los registros principales, posee **registors de propocito general** los cuales son implementados para realizar operaciones con el registro acumulador y _flag_ que se encuentre activo, estos resgistros son de 8-bits. 
+- A, B, C, D, E, H, L
 **Registos de Propocito especifico** 
 - PC (Program Counter) 16-bits
 - SP (Stack Pointer) 16-bits
@@ -37,3 +37,4 @@ Posee **registors de propocito general** los cuales son implementados para reali
 http://redeya.bytemaniacos.com/electronica/tutoriales/Z80/z80.html
 http://galia.fc.uaslp.mx/~cantocar/microprocesadores/TUTORIALES/EL_MICRO_Z80/ARQUITECTURA_DEL_MICROPROCE.HTM
 https://wiki.python.org/moin/BitManipulation
+https://clrhome.org/table/

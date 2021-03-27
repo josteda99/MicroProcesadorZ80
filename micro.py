@@ -1,21 +1,20 @@
 import Componente as com
 import numpy as np
 
+# Crear una clase processor
+# Crear una RAM y ROM
+
+h = 0xAA
+print(type(h))
+
 alu = com.ALU()
-num1 = np.int8(-71)
-num2 = np.int8(-114)
-flags = [0 for _ in range(8)]
+num1 = np.int8(-72)
+num2 = np.int8(-14)
 
-print(alu.and_logic(num1, num2, flags))
+rg = com.Register(8)
 
-# var1 = int (input("entero1\n"), base=2)
+m = com.Memory()
 
-# var2 = int (input("entero2\n"), base=2)
+print(alu.and_logic(num1, num2, rg.get_register()))
 
-# var3 = var1 + var2
-
-# s_var = bin (var3)
-# c = s_var.split('b')
-
-# print(c, type(c))
-# print(bin(var3), var3)
+print(rg.get_register())

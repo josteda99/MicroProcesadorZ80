@@ -3,17 +3,18 @@ import warnings
 warnings.simplefilter("always")
 
 class ALU(object):
-    
+
     __ZERO = 0
     __SIGN_BIT = 1 << 7
+    __instance = None
 
     def __init__(self):
-        super(ALU, self).__init__()
+        if ALU.__instance is None:
+            ALU.__instance = self
 
     def add(self, a, b, flags):
         # Los valores son de tipo int8 de numpy
-        suma = 0
-        with warnings.catch_warnings(record=True,) as w:
+        with warnings.catch_warnings(record=True) as w:
             suma = a + b
             str_sum = np.binary_repr(suma, 8)
             flags[1] = flags[4] = 0
@@ -37,8 +38,8 @@ class ALU(object):
     def and_logic(self ,a, b, flags):
         result = a & b
         flags[0] = 0
-        flags[1] = flags[4] = 1
-        flags[7] = 1 if result[0] == '1' else 0
+        flags[1] = flags[4] = 0
+        flags[7] = 1 if result < 0 else 0
         flags[6] = 0 if result != self.__ZERO else 1
         return result
 
@@ -46,60 +47,78 @@ class ALU(object):
         result = a or b
         flags[0] = 0
         flags[1] = flags[4] = 1
-        flags[7] = 1 if result[0] == '1' else 0
+        flags[7] = 1 if result < 0 else 0
         flags[6] = 0 if result != self.__ZERO else 1
         return result
-
 
     def xor_logic(self, a, b, flags):
         result = a ^ b
         flags[0] = 0
         flags[1] = flags[4] = 1
-        flags[7] = 1 if result[0] == '1' else 0
+        flags[7] = 1 if result < 0 else 0
         flags[6] = 0 if result != self.__ZERO else 1
         return result
 
-
-    def compare(self, a, b):
-        # Funcion que rotornaria las banderas respctivas para la operacion echa
-        
-        # if(a - b == 0):
-        #     # a es igual b 
-        # elif(a - b < 0):
-        #     # a es menor que b
-        # elif(a - b > 0 ):
-        #     # a es mayor que b
-        
-        # return 
-        print("Not supported yet")
-
-    def lr_bit_switch(self, a, is_left, flags):
-        if(is_left):
-            result  = a << 1
-        else:
-            result = a >> 1
-        return result 
-
     def increment(self, a, flags):
         result = a + 1
+        flags[1] = flags[4] = 1
+        flags[7] = 1 if result < 0 else 0
+        flags[6] = 0 if result != self.__ZERO else 1
         return result
 
     def decrement(self, a, flags):
         result = a - 1
+        flags[1] = flags[4] = 1
+        flags[7] = 1 if result < 0 else 0
+        flags[6] = 0 if result != self.__ZERO else 1
         return result
 
 class Register(object):
+
     def __init__(self, bits):
-        self.len = bits
-        self.rgt = []
-        
+        self.rgt = [0 for _ in range(bits)]
+
     def get_register(self):
         return self.rgt
 
-class Memory(object):
-    
-    grid_memory = [] # si esuna 
-    
+    def cast_hex(self):
+        print('No support yet')
+
+    def cast_int8():
+        print('No support yet')
+
+class Memory(object): 
+    # Esta es la RAM y ROM
+    __instance = None
+    celds = {}
+    def __int__(self, *args):
+        if Memory.__instance is None:
+            Memory.__instance = self
+
+class Processor(object):
+
     def __init__(self, *args):
-        super(Memory, self).__init__(*args)
+        super(Processor, self).__init__(*args)
+        self.A = Register(8)        # Acumulador
+        self.B = Register(8)
+        self.C = Register(8)
+        self.D = Register(8)
+        self.F = Register(8)        # flags
+        self.H = Register(8)
+        self.L = Register(8)
+        self.IR = Register(8)        # Es el que almacena la instrcucion a buscar
+        self.IX = Register(16)
+        self.IY = Register(16)
+        self.SP = Register(16)
+        self.PC = Register(16)     # []
+        self.alu = ALU
+
+    def fectch(self):
+        halt = False;
+        while halt == False:
+            with switch(bits(ir,15,12)) as s: # definir como se ingresa
+                if s.case(''):
+
+                
         
+    #def decode(self):
