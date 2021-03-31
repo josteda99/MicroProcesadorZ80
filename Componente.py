@@ -1,5 +1,7 @@
-import numpy as np
 import warnings
+
+import numpy as np
+
 warnings.simplefilter("always")
 
 class ALU(object):
@@ -73,6 +75,11 @@ class ALU(object):
         flags[6] = '0' if result != self.__ZERO else '1'
         return result
 
+    def cop_one(self, a, flags):
+        a = ['0' if bit == '1' else '1' for bit in a]
+        flags[4] = flags[1] = '1'
+        return a
+
 class Register(object):
     
     """
@@ -80,6 +87,7 @@ class Register(object):
     """
 
     def __init__(self, bits):
+        self.bits = bits
         self.rgt = ['0' for _ in range(bits)]
 
     def get_register(self):
@@ -87,16 +95,19 @@ class Register(object):
 
     def cast_hex(self):
         bit_str = "".join(self.rgt)
-        return hex(int (bit_str, 2))
+        hex_v = hex(int (bit_str, 2)).upper()
+        if len(hex_v) == 5:
+            hex_v = "0X0" + hex_v[2:]
+        return hex_v
 
     def cast_int8(self):
-        return np.int8("".join(self.rgt))
+        return np.int8(int ("".join(self.rgt), 2))
 
     def copy_from_array(self, new_register):
         self.rgt = new_register[:]
 
     def copy_from_int8(self, int_rgs):
-        self.rgt = np.binary_repr(int_rgs, 8)
+        self.rgt = list (np.binary_repr(int_rgs, self.bits))
 
 class Memory(object):
     """
@@ -104,9 +115,12 @@ class Memory(object):
         El directorio de las memoria debe ser de la siguiente manera de
         el indici un string y el valor almacenado un int en formato hex 
     """
-    celds = {}
-    def __int__(self):
-        super(Memory, self).__int__()
+    def __init__(self, *args):
+        super(Memory, self).__init__(*args)
+        self.celds = {}
+
+    def get_celds(self):
+        return self.celds
 
 class Processor(object):
 
@@ -116,6 +130,7 @@ class Processor(object):
         self.B = Register(8)
         self.C = Register(8)
         self.D = Register(8)
+        self.E = Register(8)
         self.F = Register(8)        # flags
         self.H = Register(8)
         self.L = Register(8)
@@ -124,15 +139,200 @@ class Processor(object):
         self.PC = Register(16)     # []
         self.alu = ALU
 
-    def fetch(self, memory):
+    def fetch(self, memory_ram):
         """
             memory is type Memory
         """
         # empty no sirve para nada pero no la borren xd
         empty = [0 for _ in range(8)]
-        self.IR.copy_from_int8(memory.celds[self.PC.cast_hex()])
+        self.IR.copy_from_int8(memory_ram.get_celds()[self.PC.cast_hex()])
         new_r = self.alu.increment(self.alu, self.PC.cast_int8(), empty)
         self.PC.copy_from_int8(new_r)
 
-    def decode(self):
-        print('No support yet')
+    def decode(self, memory_rom):
+        print('IR: ', self.IR.get_register())
+        print('A antes decode: ', self.A.get_register())
+        print(self.IR.cast_hex())
+        print(self.IR.cast_hex()[:3])
+        Processor.__ISA.get(self.IR.cast_hex()[:3])(self, memory_rom)
+        print('A despues decode: ', self.A.get_register())
+        print('F: ', self.F.get_register())
+
+    def get_hl(self, memory_rom):
+        '''
+            Retorna el valor que este en la posicion de memoria HL
+        '''
+        h, l = self.H.cast_hex(), self.L.cast_hex()
+        dirc = '0X' + h[2:] + l[2:] if h[2] != '0' and l[2] != '0' else '0X0'
+        return np.int8(memory_rom.get_celds()[dirc])
+
+    def ze_f(self, memory_rom):
+        '''
+            Se revisa cual de todas las funciones cullo OpCode comienza por 0X0
+        '''
+        ir_hex = self.IR.cast_hex()
+        print('ACA 0')
+        if ir_hex[3] == '0':      # NOP
+            pass
+        elif ir_hex[3] == '4':      # INC B
+            new_reg = self.alu.increment(self.alu, self.B.cast_int8(), self.F.get_register())
+            self.B.copy_from_int8(new_reg)
+        elif ir_hex[3] == 'C':    # INC C
+            new_reg = self.alu.increment(self.alu, self.C.cast_int8(), self.F.get_register())
+            self.C.copy_from_int8(new_reg)
+        elif ir_hex[3] == '6':    # LD B, n
+            print('ACA')
+            bits = list (bin(int (self.IR.cast_hex()[4:], 16))[2:])
+            self.A.copy_from_array(bits)
+
+    def on_f(self, memory_rom):
+        '''
+            Se revisa cual de todas las funciones cullo OpCode comienza por 0X1
+        '''
+        if self.IR.cast_hex()[3] == '4':      # INC D
+            new_reg = self.alu.increment(self.alu, self.D.cast_int8(), self.F.get_register())
+            self.D.copy_from_int8(new_reg)
+        elif self.IR.cast_hex()[3] == 'C':    # INC E
+            new_reg = self.alu.increment(self.alu, self.E.cast_int8(), self.F.get_register())
+            self.E.copy_from_int8(new_reg)
+
+    def tw_f(self, memory_rom):
+        '''
+            Se revisa cual de todas las funciones cullo OpCode comienza por 0X2
+        '''
+        if self.IR.cast_hex()[3] == '4':      # INC H
+            new_reg = self.alu.increment(self.alu, self.H.cast_int8(), self.F.get_register())
+            self.H.copy_from_int8(new_reg)
+        elif self.IR.cast_hex()[3] == 'C':    # INC L
+            new_reg = self.alu.increment(self.alu, self.L.cast_int8(), self.F.get_register())
+            self.L.copy_from_int8(new_reg)
+        elif self.IR.cast_hex()[3] == 'F':    # CPL
+            print('CPL')
+            new_reg = self.alu.cop_one(self.alu, self.A.get_register(), self.F.get_register())
+            self.A.copy_from_array(new_reg)
+
+    def th_f(self, memory_rom):
+        '''
+            Se revisa cual de todas las funciones cullo OpCode comienza por 0X3
+        '''
+        if self.IR.cast_hex()[3] == '4':      # INC HL
+            pass 
+        elif self.IR.cast_hex()[3] == 'C':    # INC A
+            new_reg = self.alu.increment(self.alu, self.A.cast_int8(), self.F.get_register())
+            self.A.copy_from_int8(new_reg)
+        elif self.IR.cast_hex()[3] == 'F':    # CCF
+            self.F.get_register()[1] = self.F.get_register()[4] = 0
+            self.F.get_register()[0] = '1' if self.F.get_register()[0] == '0' else '0'
+
+    def fr_f(self, memory_rom):
+        '''
+            Se revisa cual de todas las funciones cullo OpCode comienza por 0X4
+        '''
+
+    def fv_f(self, memory_rom):
+        '''
+            Se revisa cual de todas las funciones cullo OpCode comienza por 0X5
+        '''
+
+    def sx_f(self, memory_rom):
+        '''
+            Se revisa cual de todas las funciones cullo OpCode comienza por 0X6
+        '''
+
+    def sv_f(self, memory_rom):
+        '''
+            Se revisa cual de todas las funciones cullo OpCode comienza por 0X7
+        '''
+
+    def eg_f(self, memory_rom):
+        '''
+            Se revisa cual de todas las funciones cullo OpCode comienza por 0X8
+        '''
+
+    def ni_f(self, memory_rom):
+        '''
+            Se revisa cual de todas las funciones cullo OpCode comienza por 0X9
+        '''
+
+    def a_fu(self, memory_rom):
+        '''
+            Se revisa cual de todas las funciones cullo OpCode comenza por 0XA
+        '''
+        if self.IR.get_register()[4] == '0':
+            r_opt = {
+                '0': self.B.cast_int8(),
+                '1': self.C.cast_int8(),
+                '2': self.D.cast_int8(),
+                '3': self.E.cast_int8(),
+                '4': self.H.cast_int8(),
+                '5': self.L.cast_int8(),  
+                '7': self.A.cast_int8(),
+            }
+            a_int8 = self.A.cast_int8()
+            r_int8 = r_opt.get(self.IR.cast_hex()[3], self.get_hl(memory_rom))
+            new_register = self.alu.and_logic(self.alu, a_int8, r_int8, self.F.get_register())
+            self.A.copy_from_int8(new_register)
+        else:
+            # Acá debe venir la funcion XOR
+            pass
+
+    def b_fu(self, memory_rom):
+        '''
+            Se revisa cual de todas las funciones cullo OpCode comienza por 0XB
+        '''
+        if self.IR.get_register()[4] == '0':    # AND s
+            s_opt = {
+                '0': self.B.cast_int8(),
+                '1': self.C.cast_int8(),
+                '2': self.D.cast_int8(),
+                '3': self.E.cast_int8(),
+                '4': self.H.cast_int8(),
+                '5': self.L.cast_int8(),  
+                '7': self.A.cast_int8(),
+            }
+            a_int8 = self.A.cast_int8()
+            s_int8 = s_opt.get(self.IR.cast_hex()[3], self.get_hl(memory_rom))
+            new_register = self.alu.or_logic(self.alu, a_int8, s_int8)
+            self.A.copy_from_int8(new_register)
+        else:
+            # Acá deben venir las instruciones CP
+            pass
+
+    def c_fu(self, memory_rom):
+        '''
+            Se revisa cual de todas las funciones cullo OpCode comienza por 0XC
+        '''
+
+    def d_fu(self, memory_rom):
+        '''
+            Se revisa cual de todas las funciones cullo OpCode comienza por 0XD
+        '''
+
+    def e_fu(self, memory_rom):
+        '''
+            Se revisa cual de todas las funciones cullo OpCode comienza por 0XE
+        '''
+
+    def f_fu(self, memory_rom):
+        '''
+            Se revisa cual de todas las funciones cullo OpCode comienza por 0XF
+        '''
+
+    __ISA = {
+        '0X0': ze_f,
+        '0X1': on_f,
+        '0X2': tw_f,
+        '0X3': th_f,
+        '0X4': fr_f,
+        '0X5': fv_f,
+        '0X6': sx_f,
+        '0X7': sv_f,
+        '0X8': eg_f,
+        '0X9': ni_f,
+        '0XA': a_fu,
+        '0XB': b_fu,
+        '0XC': c_fu,
+        '0XD': d_fu,
+        '0XE': e_fu,
+        '0XF': f_fu
+    }
