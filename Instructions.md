@@ -28,7 +28,6 @@ Los registros de propocito general se encuentran indexados de la siguiente maner
     - LD (HL), n (almacena en memoria un entero n)
     - LD A, (BC) (maneja conjunto los registros BC para representar una direccion de memoria y lo carca en el acumulador)(opcional)
     - LD A, (DE) (maneja conjunto los registros DE para representar una direccion de memoria y lo carca en el acumulador)(opcional)
-    - LD A, (nn) (los entero nn representan la direccion de memoria y el contenido se carga en el acumulador)(opcional)
     - LD (BC), A (inversos)(opcional)
     - LD (DE), A (inversos)(opcional)
     - LD (nn), A (inversos)(opcional)
