@@ -171,7 +171,11 @@ class Processor(object):
         dirc = '0X' + h[2:] + l[2:] if h[2] != '0' and l[2] != '0' else '0X0'
         memory_rom.get_celds()[dirc] = int (hex_value, 16)
 
+<<<<<<< HEAD
     def ze_f(self, memory_rom, memory_ram):
+=======
+    def ze_f(self, memory_rom):
+>>>>>>> c73ab14c9f1164f33b316750ca6bed24b0d1ac36
         '''
             Se revisa cual de todas las funciones cullo OpCode comienza por 0X0
         '''
