@@ -191,7 +191,7 @@ class Processor(object):
             bits = list (bin(int (self.IR.cast_hex()[4:], 16))[2:])
             self.C.copy_from_array(bits)
         elif ir_hex[3] == 'A':      # LD A, (BC)
-            b, c = self.B.cast_hex(), self.c.cast_hex()
+            b, c = self.B.cast_hex(), self.C.cast_hex()
             dirc = '0X' + b[2:] + c[2:] if b[2] != '0' and c[2] != '0' else '0X0'
             self.A.cast_int8(np.int8(memory_rom.get_celds()[dirc]))
 
