@@ -98,6 +98,8 @@ class Register(object):
         hex_v = hex(int (bit_str, 2)).upper()
         if len(hex_v) == 5:
             hex_v = "0X0" + hex_v[2:]
+        if len(hex_v) == 4:
+            hex_v = "0X00" + hex_v[2:]
         return hex_v
 
     def cast_int8(self):
@@ -351,12 +353,6 @@ class Processor(object):
         '''
             Se revisa cual de todas las funciones cullo OpCode comienza por 0XC
         '''
-        ir_hex = self.IR.cast_hex()
-        if ir_hex[3] == '3':
-            new_register = self.alu.increment(self.alu, self.PC.get_register(), self.F.get_register())
-            self.PC.copy_from_int8(new_register)
-            self.IR.copy_from_int8()
-
 
     def d_fu(self, memory_rom, memory_ram):
         '''
