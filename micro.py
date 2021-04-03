@@ -4,29 +4,22 @@ import numpy as np
 # Crear una clase processor
 # Crear una RAM y ROM
 
-def print_uno():
-    print("Es un uno")
-
-def switch(args):
-    dic = {
-        'A' : 1,
-        '1' : print_uno(),
-    }
-    return dic.get(args, 'No esta')
-
 m_ram = com.Memory()
-m_ram.get_celds()['0X0'] = 0X06F1
+m_ram.get_celds()['0X0000'] = 0X06F1
 m_rom = com.Memory()
-m_rom.get_celds()['0X0'] = 0XA1
+m_rom.get_celds()['0X0000'] = np.int8(0XA1)
 
-h, l= '0XF9', '0XB1'
-hl = '0X' + h[2:] + l[2:]
+f = ['0' for _ in range(8)]
+a = ['1', '0', '1', '1', '1', '0', '1', '0']
+a_ = ['0']
 
-v = list (bin(int (hl[4:], 16)))[2:]
-
+print(int ("A2", 16))
+print(list(np.binary_repr(np.int8(int ("A2", 16)), 8)))     # De un np.int8 a una lista de bits
+print(np.int8(int(''.join(a), 2)))          # castear de una lista de bits a un np.int8
 p = com.Processor()
-p.fetch(m_ram)
-p.decode(m_rom)
-print(m_rom.get_celds())
-p.set_value_hl('2A', m_rom)
-print(m_rom.get_celds())
+
+f[0] = a[7]
+a_.extend(a[:7])
+print(a)
+print(a_)
+print(f)

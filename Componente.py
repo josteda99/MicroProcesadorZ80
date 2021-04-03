@@ -98,12 +98,17 @@ class Register(object):
         hex_v = hex(int (bit_str, 2)).upper()
         if len(hex_v) == 5:
             hex_v = "0X0" + hex_v[2:]
-        if len(hex_v) == 4:
-            hex_v = "0X00" + hex_v[2:]
+        elif len(hex_v) == 4 and self.bits == 16:
+            hex_v = "0X00"   + hex_v[2:]
+        elif len(hex_v) == 3:
+            hex_v = ("0X000" if self.bits == 16 else "0X0") + hex_v[2]
         return hex_v
 
     def cast_int8(self):
-        return np.int8(int ("".join(self.rgt), 2))
+        if self.bits == 8:
+            return np.int8(int ("".join(self.rgt), 2))
+        else:
+            return np.int16(int ("".join(self.rgt), 2))
 
     def copy_from_array(self, new_register):
         self.rgt = new_register[:]
@@ -115,7 +120,7 @@ class Memory(object):
     """
         Esta es la memoria RAM
         El directorio de las memoria debe ser de la siguiente manera de
-        el indici un string y el valor almacenado un int en formato hex 
+        el indici un string y el valor almacenado un np.int8 en formato hex 
     """
     def __init__(self, *args):
         super(Memory, self).__init__(*args)
@@ -151,12 +156,12 @@ class Processor(object):
         new_r = self.alu.increment(self.alu, self.PC.cast_int8(), empty)
         self.PC.copy_from_int8(new_r)
 
-    def decode(self, memory_rom, memory_ram):
+    def decode(self, memory_rom, memory_ram, in_byte):
         print('IR: ', self.IR.get_register())
         print('A antes decode: ', self.A.get_register())
         print(self.IR.cast_hex())
         print(self.IR.cast_hex()[:3])
-        Processor.__ISA.get(self.IR.cast_hex()[:3])(self, memory_rom, memory_ram)
+        Processor.__ISA.get(self.IR.cast_hex()[:3])(self, memory_rom, memory_ram, in_byte)
         print('A despues decode: ', self.A.get_register())
         print('F: ', self.F.get_register())
 
@@ -166,14 +171,14 @@ class Processor(object):
         '''
         h, l = self.H.cast_hex(), self.L.cast_hex()
         dirc = '0X' + h[2:] + l[2:] if h[2] != '0' and l[2] != '0' else '0X0'
-        return np.int8(memory_rom.get_celds()[dirc])
+        return memory_rom.get_celds()[dirc]
 
     def __set_value_hl__(self, hex_value, memory_rom):
         h, l = self.H.cast_hex(), self.L.cast_hex()
         dirc = '0X' + h[2:] + l[2:] if h[2] != '0' and l[2] != '0' else '0X0'
         memory_rom.get_celds()[dirc] = int (hex_value, 16)
 
-    def ze_f(self, memory_rom, memory_ram):
+    def ze_f(self, memory_rom, memory_ram, in_byte):
         '''
             Se revisa cual de todas las funciones cullo OpCode comienza por 0X0
         '''
@@ -196,8 +201,13 @@ class Processor(object):
             b, c = self.B.cast_hex(), self.C.cast_hex()
             dirc = '0X' + b[2:] + c[2:] if b[2] != '0' and c[2] != '0' else '0X0'
             self.A.cast_int8(np.int8(memory_rom.get_celds()[dirc]))
+        elif ir_hex[3] == 'F':
+            self.F.get_register()[0] = self.A.get_register()[7]
+            a = [self.F.get_register()[0]]
+            a.extend(a[:7])
+            self.A.copy_from_array(a)
 
-    def on_f(self, memory_rom, memory_ram):
+    def on_f(self, memory_rom, memory_ram, in_byte):
         '''
             Se revisa cual de todas las funciones cullo OpCode comienza por 0X1
         '''
@@ -215,7 +225,7 @@ class Processor(object):
             bits = list (bin(int (self.IR.cast_hex()[4:], 16))[2:])
             self.E.copy_from_array(bits)
 
-    def tw_f(self, memory_rom, memory_ram):
+    def tw_f(self, memory_rom, memory_ram, in_byte):
         '''
             Se revisa cual de todas las funciones cullo OpCode comienza por 0X2
         '''
@@ -235,8 +245,12 @@ class Processor(object):
         elif ir_hex[3] == 'E':          # LD L, n
             bits = list (bin(int (self.IR.cast_hex()[4:], 16))[2:])
             self.L.copy_from_array(bits)
+        elif ir_hex[3] == '8' and self.F.get_register()[6] == '1':      # JR z, e
+            e = int ('0X' + ir_hex[5:], 16)
+            new_pc = self.alu.add(self.alu, self.PC.cast_int8(), e, self.F.get_register())
+            self.PC.copy_from_int8(new_pc)
 
-    def th_f(self, memory_rom, memory_ram):
+    def th_f(self, memory_rom, memory_ram, in_byte):
         '''
             Se revisa cual de todas las funciones cullo OpCode comienza por 0X3
         '''
@@ -250,12 +264,13 @@ class Processor(object):
             self.F.get_register()[1] = self.F.get_register()[4] = 0
             self.F.get_register()[0] = '1' if self.F.get_register()[0] == '0' else '0'
         elif ir_hex[3] == '6':      # LD (HL), n
-            self.____set_value_hl__(ir_hex[4:], memory_rom)
+            hex_ = np.int8(int (ir_hex[4:], 16))
+            self.____set_value_hl__(hex_, memory_rom)
         elif ir_hex[3] == 'E':      # LD A, n
             bits = list (bin(int (self.IR.cast_hex()[4:], 16))[2:])
             self.A.copy_from_array(bits)
 
-    def fr_f(self, memory_rom, memory_ram):
+    def fr_f(self, memory_rom, memory_ram, in_byte):
         '''
             Se revisa cual de todas las funciones cullo OpCode comienza por 0X4
         '''
@@ -265,7 +280,7 @@ class Processor(object):
         elif ir_hex[3] == 'E':      # LD C, (HL)
             self.C.cast_int8(self.__get_value_hl__(memory_rom))
 
-    def fv_f(self, memory_rom, memory_ram):
+    def fv_f(self, memory_rom, memory_ram, in_byte):
         '''
             Se revisa cual de todas las funciones cullo OpCode comienza por 0X5
         '''
@@ -275,7 +290,7 @@ class Processor(object):
         elif ir_hex[3] == 'E':      # LD E, (HL)
             self.E.cast_int8(self.__get_value_hl__(memory_rom))
 
-    def sx_f(self, memory_rom, memory_ram):
+    def sx_f(self, memory_rom, memory_ram, in_byte):
         '''
             Se revisa cual de todas las funciones cullo OpCode comienza por 0X6
         '''
@@ -285,7 +300,7 @@ class Processor(object):
         elif ir_hex[3] == 'E':      # LD L, (HL)
             self.L.cast_int8(self.__get_value_hl__(memory_rom))
 
-    def sv_f(self, memory_rom, memory_ram):
+    def sv_f(self, memory_rom, memory_ram, in_byte):
         '''
             Se revisa cual de todas las funciones cullo OpCode comienza por 0X7
         '''
@@ -293,17 +308,17 @@ class Processor(object):
         if ir_hex[3] == '6':        # LD A, (HL)
             self.A.cast_int8(self.__get_value_hl__(memory_rom))
 
-    def eg_f(self, memory_rom, memory_ram):
+    def eg_f(self, memory_rom, memory_ram, in_byte):
         '''
             Se revisa cual de todas las funciones cullo OpCode comienza por 0X8
         '''
 
-    def ni_f(self, memory_rom, memory_ram):
+    def ni_f(self, memory_rom, memory_ram, in_byte):
         '''
             Se revisa cual de todas las funciones cullo OpCode comienza por 0X9
         '''
 
-    def a_fu(self, memory_rom, memory_ram):
+    def a_fu(self, memory_rom, memory_ram, in_byte):
         '''
             Se revisa cual de todas las funciones cullo OpCode comenza por 0XA
         '''
@@ -326,7 +341,7 @@ class Processor(object):
             # Acá debe venir la funcion XOR
             pass
 
-    def b_fu(self, memory_rom, memory_ram):
+    def b_fu(self, memory_rom, memory_ram, in_byte):
         '''
             Se revisa cual de todas las funciones cullo OpCode comienza por 0XB
         '''
@@ -349,22 +364,203 @@ class Processor(object):
             # Acá deben venir las instruciones CP
             pass
 
-    def c_fu(self, memory_rom, memory_ram):
+    def c_fu(self, memory_rom, memory_ram, in_byte):
         '''
             Se revisa cual de todas las funciones cullo OpCode comienza por 0XC
         '''
+        ir_hex = self.IR.cast_hex()
+        if ir_hex[3] == '3':        # JP nn
+            new_register = self.alu.increment(self.alu, self.PC.get_register(), self.F.get_register())
+            self.PC.copy_from_int8(new_register)
+            bits = hex (memory_ram.get_celds()[self.PC.cast_hex()])
+            bits = np.int8(int ('0X' + bits[:3:-1] + bits[2:4]))
+            self.PC.copy_from_int8(bits)
+        if ir_hex[3] == 'B':        # Operation bits
+            if ir_hex[4] == '0':        # Operation RLC r
+                register = []
+                if ir_hex[5] == '0':    # RLC B
+                    self.F.get_register()[0] = self.B.get_register()[0]
+                    register.extend(self.B.get_register[1:])
+                    register.append(self.F.get_register()[0])
+                    self.B.copy_from_array(register)
+                elif ir_hex[5] == '1':  # RLC C
+                    self.F.get_register()[0] = self.D.get_register()[0]
+                    register.extend(self.C.get_register[1:])
+                    register.append(self.F.get_register()[0])
+                    self.C.copy_from_array(register)
+                elif ir_hex[5] == '2':  # RLC D
+                    self.F.get_register()[0] = self.D.get_register()[7]
+                    register.extend(self.D.get_register[1:])
+                    register.append(self.F.get_register()[0])
+                    self.D.copy_from_array(register)
+                elif ir_hex[5] == '3':  # RLC E
+                    self.F.get_register()[0] = self.E.get_register()[0]
+                    register.extend(self.E.get_register[1:])
+                    register.append(self.F.get_register()[0])
+                    self.E.copy_from_array(register)
+                elif ir_hex[5] == '4':  # RLC H
+                    self.F.get_register()[0] = self.H.get_register()[0]
+                    register.extend(self.H.get_register[1:])
+                    register.append(self.F.get_register()[0])
+                    self.H.copy_from_array(register)
+                elif ir_hex[5] == '5':  # RLC L
+                    self.F.get_register()[0] = self.L.get_register()[0]
+                    register.extend(self.L.get_register[1:])
+                    register.append(self.F.get_register()[0])
+                    self.L.copy_from_array(register)
+                elif ir_hex[5] == '6':  # RLC HL
+                    hl = np.binary_repr(self.__get_value_hl__(memory_rom)[2:], 8)
+                    self.F.get_register()[0] = hl[0]
+                    register.extend(hl[1:])
+                    register.append(self.F.get_register()[0])
+                    hex_ = np.int8(int(''.join(register), 2))
+                    self.__set_value_hl__(hex_, memory_rom)
+                else:                   # RLC A
+                    self.F.get_register()[0] = self.A.get_register()[0]
+                    register.extend(self.A.get_register[1:])
+                    register.append(self.F.get_register()[0])
+                    self.A.copy_from_array(register)
+            elif ir_hex[4] == '1':      # Operation RL r
+                register = [self.F.get_register()[0]]
+                f_ = self.F.get_register()[0]
+                if ir_hex[5] == '0':    # RL B
+                    self.F.get_register()[0] = self.B.get_register()[0]
+                    register.extend(self.B.get_register()[1:])
+                    register.append(f_)
+                    self.B.copy_from_array(register)
+                elif ir_hex[5] == '1':  # RL C
+                    self.F.get_register()[0] = self.C.get_register()[0]
+                    register.extend(self.C.get_register()[1:])
+                    register.append(f_)
+                    self.C.copy_from_array(register)
+                elif ir_hex[5] == '2':  # RL D
+                    self.F.get_register()[0] = self.D.get_register()[0]
+                    register.extend(self.D.get_register()[1:])
+                    register.append(f_)
+                    self.D.copy_from_array(register)
+                elif ir_hex[5] == '3':  # RL E
+                    self.F.get_register()[0] = self.E.get_register()[0]
+                    register.extend(self.E.get_register()[1:])
+                    register.append(f_)
+                    self.E.copy_from_array(register)
+                elif ir_hex[5] == '4':  # RL H
+                    self.F.get_register()[0] = self.H.get_register()[0]
+                    register.extend(self.H.get_register()[1:])
+                    register.append(f_)
+                    self.H.copy_from_array(register)
+                elif ir_hex[5] == '5':  # RL L
+                    self.F.get_register()[0] = self.L.get_register()[0]
+                    register.extend(self.L.get_register()[1:])
+                    register.append(f_)
+                    self.L.copy_from_array(register)
+                elif ir_hex[5] == '6':  # RL (HL)
+                    hl = list (np.binary_repr(self.__get_value_hl__(memory_rom), 8))
+                    self.F.get_register()[0] = hl[0]
+                    register.extend(hl[1:])
+                    register.append(f_)
+                    hex_ = np.int8(int (''.join(register), 2))
+                    self.__set_value_hl__(hex_, memory_rom)
+                elif ir_hex[5] == '7':  # RL A
+                    self.F.get_register()[0] = self.A.get_register()[0]
+                    register.extend(self.A.get_register()[1:])
+                    register.append(f_)
+                    self.A.copy_from_array(register)
+            elif ir_hex[4] == '2':      # Operation SLA m
+                register = []
+                if ir_hex[5] == '0':    # SLA B
+                    self.F.get_register()[0] = self.B.get_register()[0]
+                    register.extend(self.B.get_register()[1:])
+                    register.append('0')
+                    self.B.copy_from_array(register)
+                elif ir_hex[5] == '1':  # SLA C
+                    self.F.get_register()[0] = self.C.get_register()[0]
+                    register.extend(self.C.get_register()[1:])
+                    register.append('0')
+                    self.C.copy_from_array(register)
+                elif ir_hex[5] == '2':  # SLA D
+                    self.F.get_register()[0] = self.D.get_register()[0]
+                    register.extend(self.D.get_register()[1:])
+                    register.append('0')
+                    self.D.copy_from_array(register)
+                elif ir_hex[5] == '3':  # SLA E
+                    self.F.get_register()[0] = self.E.get_register()[0]
+                    register.extend(self.E.get_register()[1:])
+                    register.append('0')
+                    self.E.copy_from_array(register)
+                elif ir_hex[5] == '4':  # SLA H
+                    self.F.get_register()[0] = self.H.get_register()[0]
+                    register.extend(self.B.get_register()[1:])
+                    register.append('0')
+                    self.H.copy_from_array(register)
+                elif ir_hex[5] == '5':  # SLA L
+                    self.F.get_register()[0] = self.L.get_register()[0]
+                    register.extend(self.L.get_register()[1:])
+                    register.append('0')
+                    self.L.copy_from_array(register)
+                elif ir_hex[5] == '6':  # SLA (HL)
+                    hl = list (np.binary_repr(self.__get_value_hl__(memory_rom), 8))
+                    self.F.get_register()[0] = hl[0]
+                    register.extend(hl[1:])
+                    register.append('0')
+                    hex_ = np.int8(int (''.join(register), 2))
+                    self.__set_value_hl__(hex_, memory_rom)
+                elif ir_hex[5] == '7':  # SLA A
+                    self.F.get_register()[0] = self.A.get_register()[0]
+                    register.extend(self.A.get_register()[1:])
+                    register.append('0')
+                    self.A.copy_from_array(register)
+            elif ir_hex[4] == '3':      # Operation SLA m
+                register = ['0']
+                if ir_hex[5] == '8':    # SRL B
+                    self.F.get_register()[0] = self.B.get_register()[7]
+                    register.extend(self.B.get_register()[:7])
+                    self.B.copy_from_array(register)
+                elif ir_hex[5] == '9':  # SRL C
+                    self.F.get_register()[0] = self.C.get_register()[7]
+                    register.extend(self.C.get_register()[:7])
+                    self.C.copy_from_array(register)
+                elif ir_hex[5] == 'A':  # SRL D
+                    self.F.get_register()[0] = self.D.get_register()[7]
+                    register.extend(self.D.get_register()[:7])
+                    self.D.copy_from_array(register)
+                elif ir_hex[5] == 'B':  # SRL E
+                    self.F.get_register()[0] = self.E.get_register()[7]
+                    register.extend(self.E.get_register()[:7])
+                    self.E.copy_from_array(register)
+                elif ir_hex[5] == 'C':  # SRL H
+                    self.F.get_register()[0] = self.H.get_register()[7]
+                    register.extend(self.H.get_register()[:7])
+                    self.H.copy_from_array(register)
+                elif ir_hex[5] == 'D':  # SRL L
+                    self.F.get_register()[0] = self.L.get_register()[7]
+                    register.extend(self.L.get_register()[:7])
+                    self.L.copy_from_array(register)
+                elif ir_hex[5] == 'E':    # SRL (HL)
+                    hl = list (np.binary_repr(self.__get_value_hl__(memory_rom), 8))
+                    self.F.get_register()[0] = hl[7]
+                    register.extend(hl[:7])
+                    hex_ = np.int8(int (''.join(register), 2))
+                    self.__set_value_hl__(hex_, memory_rom)
+                elif ir_hex[5] == 'F':  # SRL A
+                    self.F.get_register()[0] = self.A.get_register()[7]
+                    register.extend(self.A.get_register()[:7])
+                    self.A.copy_from_array(register)
 
-    def d_fu(self, memory_rom, memory_ram):
+    def d_fu(self, memory_rom, memory_ram, in_byte):
         '''
             Se revisa cual de todas las funciones cullo OpCode comienza por 0XD
         '''
+        ir_hex = self.IR.cast_hex()
+        if ir_hex[3] == 'B':
+            n = np.int8(int (in_byte, 16))
+            self.A.copy_from_int8(n)
 
-    def e_fu(self, memory_rom, memory_ram):
+    def e_fu(self, memory_rom, memory_ram, in_byte):
         '''
             Se revisa cual de todas las funciones cullo OpCode comienza por 0XE
         '''
 
-    def f_fu(self, memory_rom, memory_ram):
+    def f_fu(self, memory_rom, memory_ram, in_byte):
         '''
             Se revisa cual de todas las funciones cullo OpCode comienza por 0XF
         '''
