@@ -98,9 +98,9 @@ class Register(object):
         hex_v = hex(int (bit_str, 2)).upper()
         if len(hex_v) == 5:
             hex_v = "0X0" + hex_v[2:]
-        if len(hex_v) == 4 and self.bits == 16:
+        elif len(hex_v) == 4 and self.bits == 16:
             hex_v = "0X00"   + hex_v[2:]
-        if len(hex_v) == 3:
+        elif len(hex_v) == 3:
             hex_v = ("0X000" if self.bits == 16 else "0X0") + hex_v[2]
         return hex_v
 
