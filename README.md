@@ -20,7 +20,7 @@ Funciones a emular
 - Set bit
 
 ## Registros
-**Registros acumuladores y flag**, cada flag esta implementado comoun registro con la siguiente distribbución: _**flag[6]**: ZERO_, _**flag[7]**: Sign_, _**flag[0]**: Carry_, _**flag[2]**: OverFlow_, _**flag[1] y flag[4]**: N (ultima operacion una suma '0' o resta '1')_; estos registros son de 8-bit sacumulador y Flag respectivamente .
+**Registros acumuladores y flag**, cada flag esta implementado como un registro con la siguiente distribución: _**flag[6]**: ZERO_, _**flag[7]**: Sign_, _**flag[0]**: Carry_, _**flag[2]**: OverFlow_, _**flag[1] y flag[4]**: N (ultima operacion una suma '0' o resta '1')_; estos registros son de 8-bit sacumulador y Flag respectivamente .
 - A, F (Principales)
 - A', F'
 
