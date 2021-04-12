@@ -230,6 +230,14 @@ class Processor(object):
         elif ir_hex[3] == '5':      # DEC D
             new_reg = self.alu.decrement(self.alu, self.D.cast_int8(), self.F.get_register())
             self.D.copy_from_int8(new_reg)
+        elif ir_hex[3] == '7':      #RLA
+            #register = [self.F.get_register()[0]]
+            register = []
+            f_ = self.F.get_register()[0]
+            self.F.get_register()[0] = self.A.get_register()[0]
+            register.extend(self.A.get_register()[1:])
+            register.append(f_)
+            self.A.copy_from_array(register)
         elif ir_hex[3] == '8':      # JR e
             e = int ('0X' + ir_hex[5:], 16)
             new_pc = self.alu.add(self.alu, self.PC.cast_int8(), e, self.F.get_register())
@@ -753,10 +761,28 @@ class Processor(object):
                     self.F.get_register()[0] = self.A.get_register()[7]
                     register.extend(self.A.get_register()[:7])
                     self.A.copy_from_array(register)
-        if ir_hex[3] == '6':#ADD A,n
+        elif ir_hex[3] == '6':      #ADD A,n
             n = list (bin(int (self.IR.cast_hex()[4:], 16))[2:])
             new_reg = self.alu.add(self.alu, self.A.cast_int8(), self.n.cast_int8(), self.F.get_register())
             self.A.copy_from_int8(new_reg)
+        elif ir_hex[3] == '9':      #RET
+            #acceder al valor de la memoria con direccion SP
+            pc_hex1 = self.PC.cast_hex()
+            memVal1 = memory_ram.get_celds()[self.SP.cast_hex()]
+            #Cambiar el valor del PC[8:] al valor anterior
+            self.PC[8:] = memVal1
+            #incrementar en 1 el valor del SP
+            new_sp = self.alu.increment(self.alu, self.SP.cast_int8(), ['0' for _ in range(8)])
+            self.SP.copy_from_int8(new_sp)
+            #acceder al valor de la memoria con direccion SP
+            pc_hex2 = self.PC.cast_hex()
+            memVal2 = memory_ram.get_celds()[self.SP.cast_hex()]
+            #Cambiar el valor del PC[0:8] al valor anterior
+            self.PC[0:8] = memVal2
+            #incrementar en 1 el valor del SP
+            new_sp = self.alu.increment(self.alu, self.SP.cast_int8(), ['0' for _ in range(8)])
+            self.SP.copy_from_int8(new_sp)
+
 
 
 
@@ -784,10 +810,18 @@ class Processor(object):
             n = list (bin(int (self.IR.cast_hex()[4:], 16))[2:])
             new_reg = self.alu.xor_logic(self.alu, self.A.cast_int8(), self.n.cast_int8(), self.F.get_register())
             self.A.copy_from_int8(new_reg)
-        elif ir_hex[3] == 'D' and ir_hex[2] == '4' and ir_hex[2] == '4':
+        elif ir_hex[3] == 'D' and ir_hex[4] == '4' and ir_hex[5] == '4':    #NEG
             zero = np.int8(0);
             new_reg = self.alu.sub(self.alu, self.A.cast_int8(), zero, self.F.get_register())
             self.A.copy_from_int8(new_reg)
+        elif ir_hex[3] == 'D' and ir_hex[4] == 'A' and ir_hex[5] == '2':    #INI
+            i = np.int16(int(input()))
+            self.H.copy_from_array(i[0:8])
+            self.L.copy_from_array(i[8:])
+        elif ir_hex[3] == 'D' and ir_hex[4] == 'A' and ir_hex[5] == '3':    #OUTI
+            i1 = [self.H]
+            i2 = i1.extend([self.L])
+            print(np.int16(i2))
 
 
     def f_fu(self, memory_rom, memory_ram, in_byte):
