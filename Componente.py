@@ -178,8 +178,8 @@ class Processor(object):
 
     def __set_value_hl__(self, hex_value, memory_rom):
         h, l = self.H.cast_hex(), self.L.cast_hex()
-        dirc = '0X' + h[2:] + l[2:] if h[2] != '0' and l[2] != '0' else '0X0'
-        memory_rom.get_celds()[dirc] = int (hex_value, 16)
+        dirc = '0X00' + h[2:] + l[2:] if h[2] != '0' and l[2] != '0' else '0X0000'
+        memory_rom.get_celds()[dirc] = np.int16(int (hex_value, 16))
 
     def ze_f(self, memory_rom, memory_ram, in_byte):
         '''
@@ -191,12 +191,24 @@ class Processor(object):
         elif ir_hex[3] == '4':      # INC B
             new_reg = self.alu.increment(self.alu, self.B.cast_int8(), self.F.get_register())
             self.B.copy_from_int8(new_reg)
+        elif ir_hex[3] == '5':      # DEC B
+            new_reg = self.alu.decrement(self.alu, self.B.cast_int8(), self.F.get_register())
+            self.B.copy_from_int8(new_reg)
         elif ir_hex[3] == 'C':      # INC C
             new_reg = self.alu.increment(self.alu, self.C.cast_int8(), self.F.get_register())
+            self.C.copy_from_int8(new_reg)
+        elif ir_hex[3] == 'D':      # DEC C
+            new_reg = self.alu.decrement(self.alu, self.C.cast_int8(), self.F.get_register())
             self.C.copy_from_int8(new_reg)
         elif ir_hex[3] == '6':      # LD B, n
             bits = list (bin(int (self.IR.cast_hex()[4:], 16))[2:])
             self.B.copy_from_array(bits)
+        elif ir_hex[3] == '7':      #RLCA
+            self.F.get_register()[0] = self.A.get_register()[0]#poner el primer elemento del acumulador en carry flag ->
+            a = []
+            a.extend(self.A.get_register()[1:8])#poner el resto del arreglo de 1 a 7
+            a.append(self.F.get_register()[0])#poner en el nuevo valor del acumulador el valor de carry flag
+            self.A.copy_from_array(a)#poner ese valor en el acumulador
         elif ir_hex[3] == 'E':      # LD C,n
             bits = list (bin(int (self.IR.cast_hex()[4:], 16))[2:])
             self.C.copy_from_array(bits)
@@ -204,7 +216,7 @@ class Processor(object):
             b, c = self.B.cast_hex(), self.C.cast_hex()
             dirc = '0X' + b[2:] + c[2:]
             self.A.cast_int8(np.int8(memory_rom.get_celds()[dirc]))
-        elif ir_hex[3] == 'F':
+        elif ir_hex[3] == 'F':      #RRCA
             self.F.get_register()[0] = self.A.get_register()[7]
             a = [self.F.get_register()[0]]
             a.extend(a[:7])
@@ -222,8 +234,18 @@ class Processor(object):
         if ir_hex[3] == '4':        # INC D
             new_reg = self.alu.increment(self.alu, self.D.cast_int8(), self.F.get_register())
             self.D.copy_from_int8(new_reg)
+        elif ir_hex[3] == '5':      # DEC D
+            new_reg = self.alu.decrement(self.alu, self.D.cast_int8(), self.F.get_register())
+            self.D.copy_from_int8(new_reg)
+        elif ir_hex[3] == '8':      # JR e
+            e = int ('0X' + ir_hex[5:], 16)
+            new_pc = self.alu.add(self.alu, self.PC.cast_int8(), e, self.F.get_register())
+            self.PC.copy_from_int8(new_pc)
         elif ir_hex[3] == 'C':      # INC E
             new_reg = self.alu.increment(self.alu, self.E.cast_int8(), self.F.get_register())
+            self.E.copy_from_int8(new_reg)
+        elif ir_hex[3] == 'D':      # DEC E
+            new_reg = self.alu.decrement(self.alu, self.E.cast_int8(), self.F.get_register())
             self.E.copy_from_int8(new_reg)
         elif ir_hex[3] == '6':      # LD D, n
             bits = list (bin(int (self.IR.cast_hex()[4:], 16))[2:])
@@ -253,8 +275,14 @@ class Processor(object):
         if ir_hex[3] == '4':            # INC H
             new_reg = self.alu.increment(self.alu, self.H.cast_int8(), self.F.get_register())
             self.H.copy_from_int8(new_reg)
+        if ir_hex[3] == '5':            # DEC H
+            new_reg = self.alu.decrement(self.alu, self.H.cast_int8(), self.F.get_register())
+            self.H.copy_from_int8(new_reg)
         elif ir_hex[3] == 'C':          # INC L
             new_reg = self.alu.increment(self.alu, self.L.cast_int8(), self.F.get_register())
+            self.L.copy_from_int8(new_reg)
+        elif ir_hex[3] == 'D':          # DEC L
+            new_reg = self.alu.decrement(self.alu, self.L.cast_int8(), self.F.get_register())
             self.L.copy_from_int8(new_reg)
         elif ir_hex[3] == 'F':          # CPL
             new_reg = self.alu.cop_one(self.alu, self.A.get_register(), self.F.get_register())
@@ -272,6 +300,10 @@ class Processor(object):
         elif ir_hex[3] == '3':      # INC HL
             new_reg = self.alu.increment(self.alu, self.__get_value_hl__(memory_rom), self.F.get_register())
             self.____set_value_hl__(new_reg, memory_rom)
+        elif ir_hex[3] == '0' and self.F.get_register()[6] == '0':      # JR Nz, e
+            e = int ('0X' + ir_hex[5:], 16)
+            new_pc = self.alu.add(self.alu, self.PC.cast_int8(), e, self.F.get_register())
+            self.PC.copy_from_int8(new_pc)
 
     def th_f(self, memory_rom, memory_ram, in_byte):
         '''
@@ -279,9 +311,20 @@ class Processor(object):
         '''
         ir_hex = self.IR.cast_hex()
         if ir_hex[3] == '4':        # INC HL
-            pass 
+            pass
+        elif ir_hex[3] == '5':      # DEC HL
+            #new_reg = self.alu.decrement(self.alu, self.__get_value_hl__.cast_int8(), self.F.get_register())
+            #self.__set_value_hl__.copy_from_int8(new_reg)
+            pass
+        elif ir_hex[3] == 'A':      #LD A,(nn)
+            bits = hex (memory_ram.get_celds()[self.PC.cast_hex()])
+            bits = np.int8(int ('0X' + bits[:3:-1] + bits[2:4]))
+            self.A.copy_from_int8(bits)
         elif ir_hex[3] == 'C':      # INC A
             new_reg = self.alu.increment(self.alu, self.A.cast_int8(), self.F.get_register())
+            self.A.copy_from_int8(new_reg)
+        elif ir_hex[3] == 'D':      # DEC A
+            new_reg = self.alu.decrement(self.alu, self.A.cast_int8(), self.F.get_register())
             self.A.copy_from_int8(new_reg)
         elif ir_hex[3] == 'F':      # CCF
             self.F.get_register()[1] = self.F.get_register()[4] = 0
@@ -431,9 +474,7 @@ class Processor(object):
             Se revisa cual de todas las funciones cullo OpCode comienza por 0X7
         '''
         ir_hex = self.IR.cast_hex()
-        if ir_hex[3] == '7':        # LD A, (HL)
-            self.A.cast_int8(self.__get_value_hl__(memory_rom))
-        elif ir_hex[3] == '6':        # HALT
+        if ir_hex[3] == '6':        # HALT
             pass
         elif ir_hex[3] == '8':        # LD A,B
             self.A.cast_int8(self.B.cast_int8())
@@ -449,34 +490,55 @@ class Processor(object):
             self.A.cast_int8(self.L.cast_int8())
         elif ir_hex[3] == 'F':        # LD A,A
             self.A.cast_int8(self.A.cast_int8())
+        elif ir_hex[3] == '0':      #LD (HL) B
+            Bval = self.B.cast_hex()
+            self.__set_value_hl__(Bval,memory_rom)
+        elif ir_hex[3] == '1':      #LD (HL) C
+            Cval = self.C.cast_hex()
+            self.__set_value_hl__(Cval,memory_rom)
+        elif ir_hex[3] == '2':      #LD (HL) D
+            Dval = self.D.cast_hex()
+            self.__set_value_hl__(Dval,memory_rom)
+        elif ir_hex[3] == '3':      #LD (HL) E
+            Eval = self.E.cast_hex()
+            self.__set_value_hl__(Eval,memory_rom)
+        elif ir_hex[3] == '4':      #LD (HL) H
+            Hval = self.H.cast_hex()
+            self.__set_value_hl__(Hval,memory_rom)
+        elif ir_hex[3] == '5':      #LD (HL) L
+            Lval = self.L.cast_hex()
+            self.__set_value_hl__(Lval,memory_rom)
+        elif ir_hex[3] == '7':      #LD (HL) A
+            Aval = self.A.cast_hex()
+            self.__set_value_hl__(Aval,memory_rom)
 
     def eg_f(self, memory_rom, memory_ram, in_byte):
         '''
             Se revisa cual de todas las funciones cullo OpCode comienza por 0X8
         '''
         ir_hex = self.IR.cast_hex()
-        if ir_hex[3] == '0':        #ADD A,B
+        if ir_hex[3] == '0':        # ADD A,B
             new_reg = self.alu.add(self.alu, self.A.cast_int8(), self.B.cast_int8(), self.F.get_register())
             self.A.copy_from_int8(new_reg)
-        elif ir_hex[3] == '1':      #ADD A,C
+        elif ir_hex[3] == '1':      # ADD A,C
             new_reg = self.alu.add(self.alu, self.A.cast_int8(), self.C.cast_int8(), self.F.get_register())
             self.A.copy_from_int8(new_reg)
-        elif ir_hex[3] == '2':      #ADD A,D
+        elif ir_hex[3] == '2':      # ADD A,D
             new_reg = self.alu.add(self.alu, self.A.cast_int8(), self.D.cast_int8(), self.F.get_register())
             self.A.copy_from_int8(new_reg)
-        elif ir_hex[3] == '3':      #ADD A,E
+        elif ir_hex[3] == '3':      # ADD A,E
             new_reg = self.alu.add(self.alu, self.A.cast_int8(), self.E.cast_int8(), self.F.get_register())
             self.A.copy_from_int8(new_reg)
-        elif ir_hex[3] == '4':      #ADD A,H
+        elif ir_hex[3] == '4':      # ADD A,H
             new_reg = self.alu.add(self.alu, self.A.cast_int8(), self.H.cast_int8(), self.F.get_register())
             self.A.copy_from_int8(new_reg)
-        elif ir_hex[3] == '5':      #ADD A,L
+        elif ir_hex[3] == '5':      # ADD A,L
             new_reg = self.alu.add(self.alu, self.A.cast_int8(), self.L.cast_int8(), self.F.get_register())
             self.A.copy_from_int8(new_reg)
-        elif ir_hex[3] == '6':      #ADD A,HL
+        elif ir_hex[3] == '6':      # ADD A,HL
             new_reg = self.alu.add(self.alu, self.A.cast_int8() , self.__get_value_hl__(memory_rom), self.F.get_register())
             self.A.copy_from_int8(new_reg)
-        elif ir_hex[3] == '7':      #ADD A,A
+        elif ir_hex[3] == '7':      # ADD A,A
             new_reg = self.alu.add(self.alu, self.A.cast_int8(), self.A.cast_int8(), self.F.get_register())
             self.A.copy_from_int8(new_reg)
 
@@ -484,13 +546,38 @@ class Processor(object):
         '''
             Se revisa cual de todas las funciones cullo OpCode comienza por 0X9
         '''
+        ir_hex = self.IR.cast_hex()
+        if ir_hex[3] == '0':        # SUB B
+            new_reg = self.alu.sub(self.alu, self.A.cast_int8(), self.B.cast_int8(), self.F.get_register())
+            self.A.copy_from_int8(new_reg)
+        elif ir_hex[3] == '1':      # SUB C
+            new_reg = self.alu.sub(self.alu, self.A.cast_int8(), self.C.cast_int8(), self.F.get_register())
+            self.A.copy_from_int8(new_reg)
+        elif ir_hex[3] == '2':      # SUB D
+            new_reg = self.alu.sub(self.alu, self.A.cast_int8(), self.D.cast_int8(), self.F.get_register())
+            self.A.copy_from_int8(new_reg)
+        elif ir_hex[3] == '3':      # SUB E
+            new_reg = self.alu.sub(self.alu, self.A.cast_int8(), self.E.cast_int8(), self.F.get_register())
+            self.A.copy_from_int8(new_reg)
+        elif ir_hex[3] == '4':      # SUB H
+            new_reg = self.alu.sub(self.alu, self.A.cast_int8(), self.H.cast_int8(), self.F.get_register())
+            self.A.copy_from_int8(new_reg)
+        elif ir_hex[3] == '5':      # SUB L
+            new_reg = self.alu.sub(self.alu, self.A.cast_int8(), self.L.cast_int8(), self.F.get_register())
+            self.A.copy_from_int8(new_reg)
+        elif ir_hex[3] == '6':      # SUB HL
+            new_reg = self.alu.sub(self.alu, self.A.cast_int8() , self.__get_value_hl__(memory_rom), self.F.get_register())
+            self.A.copy_from_int8(new_reg)
+        elif ir_hex[3] == '7':      # SUB A
+            new_reg = self.alu.sub(self.alu, self.A.cast_int8(), self.A.cast_int8(), self.F.get_register())
+            self.A.copy_from_int8(new_reg)
 
     def a_fu(self, memory_rom, memory_ram, in_byte):
         '''
             Se revisa cual de todas las funciones cullo OpCode comenza por 0XA
         '''
         ir_hex = self.IR.get_register()
-        if ir_hex[4] == '0':
+        if ir_hex[4] == '0':        # AND r
             r_opt = {
                 '0': self.B.cast_int8(),
                 '1': self.C.cast_int8(),
@@ -504,8 +591,31 @@ class Processor(object):
             r_int8 = r_opt.get(self.IR.cast_hex()[3], self.__get_value_hl__(memory_rom))
             new_register = self.alu.and_logic(self.alu, a_int8, r_int8, self.F.get_register())
             self.A.copy_from_int8(new_register)
+        elif ir_hex[3] == '8':      # XOR B
+            new_reg = self.alu.xor_logic(self.alu, self.A.cast_int8(), self.B.cast_int8(), self.F.get_register())
+            self.A.copy_from_int8(new_reg)
+        elif ir_hex[3] == '9':      # XOR C
+            new_reg = self.alu.xor_logic(self.alu, self.A.cast_int8(), self.C.cast_int8(), self.F.get_register())
+            self.A.copy_from_int8(new_reg)
+        elif ir_hex[3] == 'A':      # XOR D
+            new_reg = self.alu.xor_logic(self.alu, self.A.cast_int8(), self.D.cast_int8(), self.F.get_register())
+            self.A.copy_from_int8(new_reg)
+        elif ir_hex[3] == 'B':      # XOR E
+            new_reg = self.alu.xor_logic(self.alu, self.A.cast_int8(), self.E.cast_int8(), self.F.get_register())
+            self.A.copy_from_int8(new_reg)
+        elif ir_hex[3] == 'C':      # XOR H
+            new_reg = self.alu.xor_logic(self.alu, self.A.cast_int8(), self.H.cast_int8(), self.F.get_register())
+            self.A.copy_from_int8(new_reg)
+        elif ir_hex[3] == 'D':      # XOR L
+            new_reg = self.alu.xor_logic(self.alu, self.A.cast_int8(), self.L.cast_int8(), self.F.get_register())
+            self.A.copy_from_int8(new_reg)
+        elif ir_hex[3] == 'E':      # XOR HL
+            new_reg = self.alu.xor_logic(self.alu, self.A.cast_int8() , self.__get_value_hl__(memory_rom), self.F.get_register())
+            self.A.copy_from_int8(new_reg)
+        elif ir_hex[3] == 'F':      # XOR A
+            new_reg = self.alu.xor_logic(self.alu, self.A.cast_int8(), self.A.cast_int8(), self.F.get_register())
+            self.A.copy_from_int8(new_reg)
         else:
-            # Acá debe venir la funcion XOR
             pass
 
     def b_fu(self, memory_rom, memory_ram, in_byte):
@@ -513,7 +623,7 @@ class Processor(object):
             Se revisa cual de todas las funciones cullo OpCode comienza por 0XB
         '''
         ir_hex = self.IR.get_register()
-        if ir_hex[4] == '0':    # AND s
+        if ir_hex[4] == '0':        # OR s
             s_opt = {
                 '0': self.B.cast_int8(),
                 '1': self.C.cast_int8(),
@@ -527,9 +637,24 @@ class Processor(object):
             s_int8 = s_opt.get(self.IR.cast_hex()[3], self.__get_value_hl__(memory_rom))
             new_register = self.alu.or_logic(self.alu, a_int8, s_int8)
             self.A.copy_from_int8(new_register)
-        else:
+        
             # Acá deben venir las instruciones CP
-            pass
+        elif ir_hex[3] == '8':      # CP B
+            self.alu.sub(self.alu, self.A.cast_int8(), self.B.cast_int8(), self.F.get_register())
+        elif ir_hex[3] == '9':      # CP C
+            cp = self.alu.sub(self.alu, self.A.cast_int8(), self.C.cast_int8(), self.F.get_register())
+        elif ir_hex[3] == 'A':      # CP D
+            cp = self.alu.sub(self.alu, self.A.cast_int8(), self.D.cast_int8(), self.F.get_register())
+        elif ir_hex[3] == 'B':      # CP E
+            cp = self.alu.sub(self.alu, self.A.cast_int8(), self.E.cast_int8(), self.F.get_register())
+        elif ir_hex[3] == 'C':      # CP H
+            cp = self.alu.sub(self.alu, self.A.cast_int8(), self.H.cast_int8(), self.F.get_register())
+        elif ir_hex[3] == 'D':      # CP L
+            cp = self.alu.sub(self.alu, self.A.cast_int8(), self.L.cast_int8(), self.F.get_register())
+        elif ir_hex[3] == 'E':      # CP HL
+            cp = self.alu.sub(self.alu, self.A.cast_int8() , self.__get_value_hl__(memory_rom), self.F.get_register())
+        elif ir_hex[3] == 'F':      # CP A
+            cp = self.alu.sub(self.alu, self.A.cast_int8(), self.A.cast_int8(), self.F.get_register())
 
     def c_fu(self, memory_rom, memory_ram, in_byte):
         '''
@@ -543,7 +668,7 @@ class Processor(object):
             bits = np.int16(int ('0X' + bits[4:] + bits[2:4], 16))
             self.PC.copy_from_int8(bits)
         elif ir_hex[3] == 'B':          # Operation bits
-            if ir_hex[4] == '0':        # Operation RLC r
+            if ir_hex[4] == '0':        # Operation RLC r, RRC m
                 register = []
                 if ir_hex[5] == '0':    # RLC B
                     self.F.get_register()[0] = self.B.get_register()[0]
@@ -582,10 +707,52 @@ class Processor(object):
                     register.append(self.F.get_register()[0])
                     hex_ = np.int8(int(''.join(register), 2))
                     self.__set_value_hl__(hex_, memory_rom)
-                else:                   # RLC A
+                elif ir_hex[5] == '7':  # RLC A
                     self.F.get_register()[0] = self.A.get_register()[0]
                     register.extend(self.A.get_register[1:])
                     register.append(self.F.get_register()[0])
+                    self.A.copy_from_array(register)
+                elif ir_hex[5] == '8':  # RRC B
+                    self.F.get_register()[0] = self.B.get_register()[7]
+                    register.append(self.F.get_register()[0])
+                    register.extend(self.B.get_register[0:7])
+                    self.B.copy_from_array(register)
+                elif ir_hex[5] == '9':  # RRC C
+                    self.F.get_register()[0] = self.C.get_register()[7]
+                    register.append(self.F.get_register()[0])
+                    register.extend(self.C.get_register[0:7])
+                    self.C.copy_from_array(register)
+                elif ir_hex[5] == 'A':  # RRC D
+                    self.F.get_register()[0] = self.D.get_register()[7]
+                    register.append(self.F.get_register()[0])
+                    register.extend(self.D.get_register[0:7])
+                    self.D.copy_from_array(register)
+                elif ir_hex[5] == 'B':  # RRC E
+                    self.F.get_register()[0] = self.E.get_register()[7]
+                    register.append(self.F.get_register()[0])
+                    register.extend(self.E.get_register[0:7])
+                    self.E.copy_from_array(register)
+                elif ir_hex[5] == 'C':  # RRC H
+                    self.F.get_register()[0] = self.H.get_register()[7]
+                    register.append(self.F.get_register()[0])
+                    register.extend(self.H.get_register[0:7])
+                    self.H.copy_from_array(register)
+                elif ir_hex[5] == 'D':  # RRC L
+                    self.F.get_register()[0] = self.L.get_register()[7]
+                    register.append(self.F.get_register()[0])
+                    register.extend(self.L.get_register[0:7])
+                    self.L.copy_from_array(register)
+                elif ir_hex[5] == 'E':  # RRC HL
+                    hl = np.binary_repr(self.__get_value_hl__(memory_rom)[2:], 8)
+                    self.F.get_register()[0] = hl[7]
+                    register.append(self.F.get_register()[0])
+                    register.extend(hl[0:7])
+                    hex_ = np.int8(int(''.join(register), 2))
+                    self.__set_value_hl__(hex_, memory_rom)
+                elif ir_hex[5] == 'F':  # RRC A
+                    self.F.get_register()[0] = self.A.get_register()[7]
+                    register.append(self.F.get_register()[0])
+                    register.extend(self.A.get_register[0:7])
                     self.A.copy_from_array(register)
             elif ir_hex[4] == '1':      # Operation RL r
                 register = [self.F.get_register()[0]]
@@ -631,6 +798,42 @@ class Processor(object):
                     self.F.get_register()[0] = self.A.get_register()[0]
                     register.extend(self.A.get_register()[1:])
                     register.append(f_)
+                    self.A.copy_from_array(register)
+                elif ir_hex[5] == '8':    # RR B
+                    #register = [self.F.get_register()[0]]
+                    #f_ = self.F.get_register()[0]
+                    self.F.get_register()[0] = self.B.get_register()[7]
+                    register.extend(self.B.get_register()[0:7])
+                    self.B.copy_from_array(register)
+                elif ir_hex[5] == '9':  # RR C
+                    self.F.get_register()[0] = self.C.get_register()[7]
+                    register.extend(self.C.get_register()[0:7])
+                    self.C.copy_from_array(register)
+                elif ir_hex[5] == 'A':  # RR D
+                    self.F.get_register()[0] = self.D.get_register()[7]
+                    register.extend(self.D.get_register()[0:7])
+                    self.D.copy_from_array(register)
+                elif ir_hex[5] == 'B':  # RR E
+                    self.F.get_register()[0] = self.E.get_register()[7]
+                    register.extend(self.E.get_register()[0:7])
+                    self.E.copy_from_array(register)
+                elif ir_hex[5] == 'C':  # RR H
+                    self.F.get_register()[0] = self.H.get_register()[7]
+                    register.extend(self.H.get_register()[0:7])
+                    self.H.copy_from_array(register)
+                elif ir_hex[5] == 'D':  # RR L
+                    self.F.get_register()[0] = self.L.get_register()[7]
+                    register.extend(self.L.get_register()[0:7])
+                    self.L.copy_from_array(register)
+                elif ir_hex[5] == 'E':  # RR (HL)
+                    hl = list (np.binary_repr(self.__get_value_hl__(memory_rom), 8))
+                    self.F.get_register()[0] = hl[7]
+                    register.extend(hl[0:7])
+                    hex_ = np.int8(int (''.join(register), 2))
+                    self.__set_value_hl__(hex_, memory_rom)
+                elif ir_hex[5] == 'F':  # RR A
+                    self.F.get_register()[0] = self.A.get_register()[7]
+                    register.extend(self.A.get_register()[0:7])
                     self.A.copy_from_array(register)
             elif ir_hex[4] == '2':      # Operation SLA m
                 register = []
@@ -791,6 +994,10 @@ class Processor(object):
             else:
                 new_re = self.alu.add(self.alu, self.PC.cast_int8(), 2, ['0' for _ in range(8)])
                 self.PC.copy_from_int8(new_re)
+        elif ir_hex[3] == '6':          # ADD A, n
+            n = list (bin(int (ir_hex[4:], 16))[2:])
+            new_reg = self.alu.add(self.alu, self.A.cast_int8(), self.n.cast_int8(), self.F.get_register())
+            self.A.copy_from_int8(new_reg)
 
     def d_fu(self, memory_rom, memory_ram, in_byte):
         '''
@@ -811,7 +1018,8 @@ class Processor(object):
                 new_register = self.alu.increment(self.alu, self.PC.get_register(), self.F.get_register())
                 self.PC.copy_from_int8(new_register)
         elif ir_hex[3] == '3':      # OUT A
-            print(self.A.get_register())
+            print("Representación binanria: ", "".join(self.A.get_register()))
+            print("Representación Hexadecimal: ", self.A.cast_hex())
         elif ir_hex[3] == 'A':      # JP c, nn
             new_register = self.alu.increment(self.alu, self.PC.get_register(), ['0' for _ in range(8)])
             self.PC.copy_from_int8(new_register)
@@ -846,6 +1054,11 @@ class Processor(object):
             else:
                 new_re = self.alu.add(self.alu, self.PC.cast_int8(), 2, ['0' for _ in range(8)])
                 self.PC.copy_from_int8(new_re)
+        elif ir_hex[3] == '6':      # SUB n
+            n = np.int8(int (in_byte, 16))
+            new_reg = self.alu.sub(self.alu, self.A.cast_int8(), n, self.F.get_register())
+            self.A.copy_from_int8(new_reg)
+
 
     def e_fu(self, memory_rom, memory_ram, in_byte):
         '''
@@ -857,44 +1070,51 @@ class Processor(object):
             self.PC.copy_from_int8(new_pc)
         elif ir_hex[3] == 'D':      # EXTD ED
             if ir_hex[4] == '7':        
-                if ir_hex[5] == '8':       #IN A, (C)
+                if ir_hex[5] == '8':        # IN A, (C)
                     C = input()
                     self.A.copy_from_int8(C)
-                elif ir_hex[5] == '9':      #OUT (C),A
-                    print(self.A.get_register())
+                elif ir_hex[5] == '9':      # OUT (C),A
+                    print("Representación binanria: ", "".join(self.A.get_register()))
+                    print("Representación Hexadecimal: ", self.A.cast_hex())
             elif ir_hex[4] == '4':       
-                if ir_hex[5] == '0':       #IN B, (C)
+                if ir_hex[5] == '0':        # IN B, (C)
                     C = input()
                     self.B.copy_from_int8(C)
-                elif ir_hex[5] == '8':       #IN C, (C)
+                elif ir_hex[5] == '8':      # IN C, (C)
                     C = input()
                     self.C.copy_from_int8(C)
-                elif ir_hex[5] == '1':      #OUT (C),B
-                    print(self.B.get_register())
-                elif ir_hex[5] == '9':      #OUT (C),C
-                    print(self.C.get_register())
+                elif ir_hex[5] == '1':      # OUT (C),B
+                    print("Representación binanria: ", "".join(self.B.get_register()))
+                    print("Representación Hexadecimal: ", self.B.cast_hex())
+                elif ir_hex[5] == '9':      # OUT (C),C
+                    print("Representación binanria: ", "".join(self.C.get_register()))
+                    print("Representación Hexadecimal: ", self.C.cast_hex())
             elif ir_hex[4] == '5':       
-                if ir_hex[5] == '0':       #IN D, (C)
+                if ir_hex[5] == '0':        # IN D, (C)
                     C = input()
                     self.D.copy_from_int8(C)
-                elif ir_hex[5] == '8':       #IN E, (C)
+                elif ir_hex[5] == '8':      # IN E, (C)
                     C = input()
                     self.E.copy_from_int8(C)
-                elif ir_hex[5] == '1':      #OUT (C),D
-                    print(self.D.get_register())
-                elif ir_hex[5] == '9':      #OUT (C),E
-                    print(self.E.get_register())
+                elif ir_hex[5] == '1':      # OUT (C),D
+                    print("Representación binanria: ", "".join(self.D.get_register()))
+                    print("Representación Hexadecimal: ", self.D.cast_hex())
+                elif ir_hex[5] == '9':      # OUT (C),E
+                    print("Representación binanria: ", "".join(self.E.get_register()))
+                    print("Representación Hexadecimal: ", self.E.cast_hex())
             elif ir_hex[4] == '6':       
-                if ir_hex[5] == '0':       #IN H, (C)
+                if ir_hex[5] == '0':        # IN H, (C)
                     C = input()
                     self.H.copy_from_int8(C)
-                elif ir_hex[5] == '8':       #IN L, (C)
+                elif ir_hex[5] == '8':      # IN L, (C)
                     C = input()
                     self.L.copy_from_int8(C)
-                elif ir_hex[5] == '1':      #OUT (C),H
-                    print(self.H.get_register())
-                elif ir_hex[5] == '9':      #OUT (C),L
-                    print(self.L.get_register())
+                elif ir_hex[5] == '1':      # OUT (C),H
+                    print("Representación binanria: ", "".join(self.H.get_register()))
+                    print("Representación Hexadecimal: ", self.H.cast_hex())
+                elif ir_hex[5] == '9':      # OUT (C),L
+                    print("Representación binanria: ", "".join(self.L.get_register()))
+                    print("Representación Hexadecimal: ", self.L.cast_hex())
         elif ir_hex[3] == '2':      # JP po, nn
             new_register = self.alu.increment(self.alu, self.PC.get_register(), ['0' for _ in range(8)])
             self.PC.copy_from_int8(new_register)
@@ -939,6 +1159,14 @@ class Processor(object):
             else:
                 new_re = self.alu.add(self.alu, self.PC.cast_int8(), 2, ['0' for _ in range(8)])
                 self.PC.copy_from_int8(new_re)
+        if ir_hex[3] == 'E':        # XOR n
+            n = list (bin(int (self.IR.cast_hex()[4:], 16))[2:])
+            new_reg = self.alu.xor_logic(self.alu, self.A.cast_int8(), self.n.cast_int8(), self.F.get_register())
+            self.A.copy_from_int8(new_reg)
+        elif ir_hex[3] == 'D' and ir_hex[4] == '4' and ir_hex[5] == '4':
+            zero = np.int8(0);
+            new_reg = self.alu.sub(self.alu, zero, self.A.cast_int8(), self.F.get_register())
+            self.A.copy_from_int8(new_reg)
 
     def f_fu(self, memory_rom, memory_ram, in_byte):
         '''
@@ -989,6 +1217,9 @@ class Processor(object):
             else:
                 new_re = self.alu.add(self.alu, self.PC.cast_int8(), 2, ['0' for _ in range(8)])
                 self.PC.copy_from_int8(new_re)
+        if ir_hex[3] == 'E':        # CP n
+            n = list (bin(int (self.IR.cast_hex()[4:], 16))[2:])
+            cp = self.alu.sub(self.alu, self.A.cast_int8(), self.n.cast_int8(), self.F.get_register())
 
     __ISA = {
         '0X0': ze_f,
