@@ -1,5 +1,5 @@
 import warnings
-
+import requests
 import numpy as np
 
 warnings.simplefilter("always")
@@ -145,6 +145,7 @@ class Processor(object):
         self.SP = Register(16)
         self.PC = Register(16)     # []
         self.alu = ALU
+        self.SP.copy_from_array(['1' for _ in range(16)])
 
     def fetch(self, memory_ram):
         """
@@ -583,3 +584,30 @@ class Processor(object):
         '0XE': e_fu,
         '0XF': f_fu
     }
+
+def loader(memory_ram, proce):
+    opt = input('Selecione que Programa desea cargar:\n[1] Program_1\n[2] Program_2\n[3] Program_3\n')
+    url = 'https://raw.githubusercontent.com/josteda99/MicroProcesadorZ80/main/Programs/'
+    if opt == '1':
+        url += 'Program_1.csv'
+    elif opt == '2':
+        url += 'Program_2.csv'
+    else:
+        url += 'Program_3.csv'
+    resp = requests.get(url)
+    prog = resp.text.split('\n')
+    dic = memory_ram.get_celds()
+    for i in range(len(prog) - 1, -1, -1):
+        ins = prog[i]
+        print(i)
+        if not ins.startswith('A') and ins != '':
+            value = ins.split(',')
+            if proce.SP.cast_hex() == value[0]:
+                new_sp = ALU().decrement(proce.SP.cast_int8(), proce.F.get_register())
+                proce.SP.copy_from_int8(new_sp)
+                if not value[1].startswith('N'):
+                    val = value[1][0: 6]
+                    dic[value[0]] = np.int16(int (val, 16))
+            else:
+                val = value[1][0: 6]
+                dic[value[0]] = np.int16(int (val, 16))
