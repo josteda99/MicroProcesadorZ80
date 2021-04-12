@@ -1104,7 +1104,7 @@ class Processor(object):
                     print("Representación Hexadecimal: ", self.E.cast_hex())
             elif ir_hex[4] == '6':       
                 if ir_hex[5] == '0':        # IN H, (C)
-                    C = input()
+                    C = np.int8( int (input(), 10))
                     self.H.copy_from_int8(C)
                 elif ir_hex[5] == '8':      # IN L, (C)
                     C = input()
