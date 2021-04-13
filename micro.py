@@ -6,10 +6,11 @@ import numpy as np
 
 m_ram = com.Memory()
 m_rom = com.Memory()
-m_rom.get_celds()['0X0000'] = np.int8(0XA1)
+m_rom.get_celds()['0X0000'] = np.int8(0XA100)
 
 f = ['0' for _ in range(8)]
 a = ['1', '0', '1', '1', '1', '0', '1', '0']
+a_1 = '0XFEFF'
 a_ = ['0']
 
 # print(int ("A2", 16))
