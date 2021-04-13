@@ -162,7 +162,7 @@ class Processor(object):
         new_r = self.alu.increment(self.alu, self.PC.cast_int8(), empty)
         self.PC.copy_from_int8(new_r)
 
-    def decode(self, memory_ram, in_byte):
+    def decode(self, memory_ram):
         print("IR: ", self.IR.cast_hex())
         Processor.__ISA.get(self.IR.cast_hex()[:3])(self, memory_ram, in_byte)
 
@@ -475,9 +475,9 @@ class Processor(object):
             Se revisa cual de todas las funciones cullo OpCode comienza por 0X7
         '''
         ir_hex = self.IR.cast_hex()
-        if ir_hex[3] == '6':        # HALT
-            pass
-        elif ir_hex[3] == '8':        # LD A,B
+        if ir_hex[3] == '6':            # HALT
+            print("Fin del programa")
+        elif ir_hex[3] == '8':          # LD A,B
             self.A.copy_from_int8(self.B.cast_int8())
         elif ir_hex[3] == '9':        # LD A,C
             self.A.copy_from_int8(self.C.cast_int8())
@@ -1243,7 +1243,6 @@ def loader(memory_ram, proce):
     dic = memory_ram.get_celds()
     for i in range(len(prog) - 1, -1, -1):
         ins = prog[i]
-        print(i)
         if not ins.startswith('A') and ins != '':
             value = ins.split(',')
             if proce.SP.cast_hex() == value[0]:
