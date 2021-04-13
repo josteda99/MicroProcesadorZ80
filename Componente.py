@@ -361,37 +361,37 @@ class Processor(object):
         '''
         ir_hex = self.IR.cast_hex()
         if ir_hex[3] == '6':        # LD B, (HL)
-            self.B.cast_int8(self.__get_value_hl__(memory_rom))
+            self.B.copy_from_int8(self.__get_value_hl__(memory_rom))
         elif ir_hex[3] == 'E':      # LD C, (HL)
-            self.C.cast_int8(self.__get_value_hl__(memory_rom))
+            self.C.copy_from_int8(self.__get_value_hl__(memory_rom))
         elif ir_hex[3] == '0':        # LD B,B
-            self.B.cast_int8(self.B.cast_int8())
+            self.B.copy_from_int8(self.B.cast_int8())
         elif ir_hex[3] == '1':        # LD B,C
-            self.B.cast_int8(self.C.cast_int8())
+            self.B.copy_from_int8(self.C.cast_int8())
         elif ir_hex[3] == '2':        # LD B,D
-            self.B.cast_int8(self.D.cast_int8())
+            self.B.copy_from_int8(self.D.cast_int8())
         elif ir_hex[3] == '3':        # LD B,E
-            self.B.cast_int8(self.E.cast_int8())
+            self.B.copy_from_int8(self.E.cast_int8())
         elif ir_hex[3] == '4':        # LD B,H
-            self.B.cast_int8(self.H.cast_int8())
+            self.B.copy_from_int8(self.H.cast_int8())
         elif ir_hex[3] == '5':        # LD B,L
-            self.B.cast_int8(self.L.cast_int8())
+            self.B.copy_from_int8(self.L.cast_int8())
         elif ir_hex[3] == '7':        # LD B,A
-            self.B.cast_int8(self.A.cast_int8())
+            self.B.copy_from_int8(self.A.cast_int8())
         elif ir_hex[3] == '8':        # LD C,B
-            self.C.cast_int8(self.B.cast_int8())
+            self.C.copy_from_int8(self.B.cast_int8())
         elif ir_hex[3] == '9':        # LD C,C
-            self.C.cast_int8(self.C.cast_int8())
+            self.C.copy_from_int8(self.C.cast_int8())
         elif ir_hex[3] == 'A':        # LD C,D
-            self.C.cast_int8(self.D.cast_int8())
+            self.C.copy_from_int8(self.D.cast_int8())
         elif ir_hex[3] == 'B':        # LD C,E
-            self.C.cast_int8(self.E.cast_int8())
+            self.C.copy_from_int8(self.E.cast_int8())
         elif ir_hex[3] == 'C':        # LD C,H
-            self.C.cast_int8(self.H.cast_int8())
+            self.C.copy_from_int8(self.H.cast_int8())
         elif ir_hex[3] == 'D':        # LD C,L
-            self.C.cast_int8(self.L.cast_int8())
+            self.C.copy_from_int8(self.L.cast_int8())
         elif ir_hex[3] == 'F':        # LD C,A
-            self.C.cast_int8(self.A.cast_int8())
+            self.C.copy_from_int8(self.A.cast_int8())
 
     def fv_f(self, memory_rom, memory_ram, in_byte):
         '''
@@ -399,37 +399,37 @@ class Processor(object):
         '''
         ir_hex = self.IR.cast_hex()
         if ir_hex[3] == '6':        # LD D, (HL)
-            self.D.cast_int8(self.__get_value_hl__(memory_rom))
+            self.D.copy_from_int8(self.__get_value_hl__(memory_rom))
         elif ir_hex[3] == 'E':      # LD E, (HL)
-            self.E.cast_int8(self.__get_value_hl__(memory_rom))
+            self.E.copy_from_int8(self.__get_value_hl__(memory_rom))
         elif ir_hex[3] == '0':        # LD D,B
-            self.D.cast_int8(self.B.cast_int8())
+            self.D.copy_from_int8(self.B.cast_int8())
         elif ir_hex[3] == '1':        # LD D,C
-            self.D.cast_int8(self.C.cast_int8())
+            self.D.copy_from_int8(self.C.cast_int8())
         elif ir_hex[3] == '2':        # LD D,D
-            self.D.cast_int8(self.D.cast_int8())
+            self.D.copy_from_int8(self.D.cast_int8())
         elif ir_hex[3] == '3':        # LD D,E
-            self.D.cast_int8(self.E.cast_int8())
+            self.D.copy_from_int8(self.E.cast_int8())
         elif ir_hex[3] == '4':        # LD D,H
-            self.D.cast_int8(self.H.cast_int8())
+            self.D.copy_from_int8(self.H.cast_int8())
         elif ir_hex[3] == '5':        # LD D,L
-            self.D.cast_int8(self.L.cast_int8())
+            self.D.copy_from_int8(self.L.cast_int8())
         elif ir_hex[3] == '7':        # LD D,A
-            self.D.cast_int8(self.A.cast_int8())
+            self.D.copy_from_int8(self.A.cast_int8())
         elif ir_hex[3] == '8':        # LD E,B
-            self.E.cast_int8(self.B.cast_int8())
+            self.E.copy_from_int8(self.B.cast_int8())
         elif ir_hex[3] == '9':        # LD E,C
-            self.E.cast_int8(self.C.cast_int8())
+            self.E.copy_from_int8(self.C.cast_int8())
         elif ir_hex[3] == 'A':        # LD E,D
-            self.E.cast_int8(self.D.cast_int8())
+            self.E.copy_from_int8(self.D.cast_int8())
         elif ir_hex[3] == 'B':        # LD E,E
-            self.E.cast_int8(self.E.cast_int8())
+            self.E.copy_from_int8(self.E.cast_int8())
         elif ir_hex[3] == 'C':        # LD E,H
-            self.E.cast_int8(self.H.cast_int8())
+            self.E.copy_from_int8(self.H.cast_int8())
         elif ir_hex[3] == 'D':        # LD E,L
-            self.E.cast_int8(self.L.cast_int8())
+            self.E.copy_from_int8(self.L.cast_int8())
         elif ir_hex[3] == 'F':        # LD E,A
-            self.E.cast_int8(self.A.cast_int8())
+            self.E.copy_from_int8(self.A.cast_int8())
 
     def sx_f(self, memory_rom, memory_ram, in_byte):
         '''
@@ -437,37 +437,37 @@ class Processor(object):
         '''
         ir_hex = self.IR.cast_hex()
         if ir_hex[3] == '6':        # LD H, (HL)
-            self.H.cast_int8(self.__get_value_hl__(memory_rom))
+            self.H.copy_from_int8(self.__get_value_hl__(memory_rom))
         elif ir_hex[3] == 'E':      # LD L, (HL)
-            self.L.cast_int8(self.__get_value_hl__(memory_rom))
+            self.L.copy_from_int8(self.__get_value_hl__(memory_rom))
         elif ir_hex[3] == '0':        # LD H,B
-            self.H.cast_int8(self.B.cast_int8())
+            self.H.copy_from_int8(self.B.cast_int8())
         elif ir_hex[3] == '1':        # LD H,C
-            self.H.cast_int8(self.C.cast_int8())
+            self.H.copy_from_int8(self.C.cast_int8())
         elif ir_hex[3] == '2':        # LD H,D
-            self.H.cast_int8(self.D.cast_int8())
+            self.H.copy_from_int8(self.D.cast_int8())
         elif ir_hex[3] == '3':        # LD H,E
-            self.H.cast_int8(self.E.cast_int8())
+            self.H.copy_from_int8(self.E.cast_int8())
         elif ir_hex[3] == '4':        # LD H,H
-            self.H.cast_int8(self.H.cast_int8())
+            self.H.copy_from_int8(self.H.cast_int8())
         elif ir_hex[3] == '5':        # LD H,L
-            self.H.cast_int8(self.L.cast_int8())
+            self.H.copy_from_int8(self.L.cast_int8())
         elif ir_hex[3] == '7':        # LD H,A
-            self.H.cast_int8(self.A.cast_int8())
+            self.H.copy_from_int8(self.A.cast_int8())
         elif ir_hex[3] == '8':        # LD L,B
-            self.L.cast_int8(self.B.cast_int8())
+            self.L.copy_from_int8(self.B.cast_int8())
         elif ir_hex[3] == '9':        # LD L,C
-            self.L.cast_int8(self.C.cast_int8())
+            self.L.copy_from_int8(self.C.cast_int8())
         elif ir_hex[3] == 'A':        # LD L,D
-            self.L.cast_int8(self.D.cast_int8())
+            self.L.copy_from_int8(self.D.cast_int8())
         elif ir_hex[3] == 'B':        # LD L,E
-            self.L.cast_int8(self.E.cast_int8())
+            self.L.copy_from_int8(self.E.cast_int8())
         elif ir_hex[3] == 'C':        # LD L,H
-            self.L.cast_int8(self.H.cast_int8())
+            self.L.copy_from_int8(self.H.cast_int8())
         elif ir_hex[3] == 'D':        # LD L,L
-            self.L.cast_int8(self.L.cast_int8())
+            self.L.copy_from_int8(self.L.cast_int8())
         elif ir_hex[3] == 'F':        # LD L,A
-            self.L.cast_int8(self.A.cast_int8())
+            self.L.copy_from_int8(self.A.cast_int8())
 
     def sv_f(self, memory_rom, memory_ram, in_byte):
         '''
@@ -477,19 +477,19 @@ class Processor(object):
         if ir_hex[3] == '6':        # HALT
             pass
         elif ir_hex[3] == '8':        # LD A,B
-            self.A.cast_int8(self.B.cast_int8())
+            self.A.copy_from_int8(self.B.cast_int8())
         elif ir_hex[3] == '9':        # LD A,C
-            self.A.cast_int8(self.C.cast_int8())
+            self.A.copy_from_int8(self.C.cast_int8())
         elif ir_hex[3] == 'A':        # LD A,D
-            self.A.cast_int8(self.D.cast_int8())
+            self.A.copy_from_int8(self.D.cast_int8())
         elif ir_hex[3] == 'B':        # LD A,E
-            self.A.cast_int8(self.E.cast_int8())
+            self.A.copy_from_int8(self.E.cast_int8())
         elif ir_hex[3] == 'C':        # LD A,H
-            self.A.cast_int8(self.H.cast_int8())
+            self.A.copy_from_int8(self.H.cast_int8())
         elif ir_hex[3] == 'D':        # LD A,L
-            self.A.cast_int8(self.L.cast_int8())
+            self.A.copy_from_int8(self.L.cast_int8())
         elif ir_hex[3] == 'F':        # LD A,A
-            self.A.cast_int8(self.A.cast_int8())
+            self.A.copy_from_int8(self.A.cast_int8())
         elif ir_hex[3] == '0':      #LD (HL) B
             b_val = self.B.cast_hex()
             self.__set_value_hl__(b_val,memory_rom)
@@ -1063,17 +1063,17 @@ class Processor(object):
         elif ir_hex[3] == 'D':      # EXTD ED
             if ir_hex[4] == '7':        
                 if ir_hex[5] == '8':        # IN A, (C)
-                    C = input()
+                    C = np.int8(int(input(),10))
                     self.A.copy_from_int8(C)
                 elif ir_hex[5] == '9':      # OUT (C),A
                     print(Processor.__BIN_REP__, "".join(self.A.get_register()))
                     print(Processor.__HEX_REP__, self.A.cast_hex())
             elif ir_hex[4] == '4':       
                 if ir_hex[5] == '0':        # IN B, (C)
-                    C = input()
+                    C = np.int8(int(input(),10))
                     self.B.copy_from_int8(C)
                 elif ir_hex[5] == '8':      # IN C, (C)
-                    C = input()
+                    C = np.int8(int(input(),10))
                     self.C.copy_from_int8(C)
                 elif ir_hex[5] == '1':      # OUT (C),B
                     print(Processor.__BIN_REP__, "".join(self.B.get_register()))
@@ -1087,10 +1087,10 @@ class Processor(object):
                     self.A.copy_from_int8(new_reg)
             elif ir_hex[4] == '5':       
                 if ir_hex[5] == '0':        # IN D, (C)
-                    C = input()
+                    C = np.int8(int(input(),10))
                     self.D.copy_from_int8(C)
                 elif ir_hex[5] == '8':      # IN E, (C)
-                    C = input()
+                    C = np.int8(int(input(),10))
                     self.E.copy_from_int8(C)
                 elif ir_hex[5] == '1':      # OUT (C),D
                     print(Processor.__BIN_REP__, "".join(self.D.get_register()))
@@ -1103,7 +1103,7 @@ class Processor(object):
                     C = np.int8( int (input(), 10))
                     self.H.copy_from_int8(C)
                 elif ir_hex[5] == '8':      # IN L, (C)
-                    C = input()
+                    C = np.int8(int(input(),10))
                     self.L.copy_from_int8(C)
                 elif ir_hex[5] == '1':      # OUT (C),H
                     print(Processor.__BIN_REP__, "".join(self.H.get_register()))
