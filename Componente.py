@@ -361,9 +361,9 @@ class Processor(object):
         '''
         ir_hex = self.IR.cast_hex()
         if ir_hex[3] == '6':        # LD B, (HL)
-            self.B.cast_int8(self.__get_value_hl__(memory_rom))
+            self.B.copy_from_int8(self.__get_value_hl__(memory_rom))
         elif ir_hex[3] == 'E':      # LD C, (HL)
-            self.C.cast_int8(self.__get_value_hl__(memory_rom))
+            self.C.copy_from_int8(self.__get_value_hl__(memory_rom))
         elif ir_hex[3] == '0':        # LD B,B
             self.B.copy_from_int8(self.B.cast_int8())
         elif ir_hex[3] == '1':        # LD B,C
@@ -399,9 +399,9 @@ class Processor(object):
         '''
         ir_hex = self.IR.cast_hex()
         if ir_hex[3] == '6':        # LD D, (HL)
-            self.D.cast_int8(self.__get_value_hl__(memory_rom))
+            self.D.copy_from_int8(self.__get_value_hl__(memory_rom))
         elif ir_hex[3] == 'E':      # LD E, (HL)
-            self.E.cast_int8(self.__get_value_hl__(memory_rom))
+            self.E.copy_from_int8(self.__get_value_hl__(memory_rom))
         elif ir_hex[3] == '0':        # LD D,B
             self.D.copy_from_int8(self.B.cast_int8())
         elif ir_hex[3] == '1':        # LD D,C
@@ -437,9 +437,9 @@ class Processor(object):
         '''
         ir_hex = self.IR.cast_hex()
         if ir_hex[3] == '6':        # LD H, (HL)
-            self.H.cast_int8(self.__get_value_hl__(memory_rom))
+            self.H.copy_from_int8(self.__get_value_hl__(memory_rom))
         elif ir_hex[3] == 'E':      # LD L, (HL)
-            self.L.cast_int8(self.__get_value_hl__(memory_rom))
+            self.L.copy_from_int8(self.__get_value_hl__(memory_rom))
         elif ir_hex[3] == '0':        # LD H,B
             self.H.copy_from_int8(self.B.cast_int8())
         elif ir_hex[3] == '1':        # LD H,C
