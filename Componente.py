@@ -130,7 +130,12 @@ class Memory(object):
 
     def get_celds(self):
         return self.celds
-
+    
+    def print_info(self):
+        print("Informacion celdas de memoria:")
+        for key, value in self.celds.items():
+            print("Add: " + key, end=", ")
+            print("Value: ", value)
 class Processor(object):
     
     __BIN_REP__ = "Representación binanria: "
@@ -162,9 +167,10 @@ class Processor(object):
         new_r = self.alu.increment(self.alu, self.PC.cast_int8(), empty)
         self.PC.copy_from_int8(new_r)
 
-    def decode(self, memory_ram, in_byte):
+    def decode(self, memory_ram):
         print("IR: ", self.IR.cast_hex())
-        Processor.__ISA.get(self.IR.cast_hex()[:3])(self, memory_ram, in_byte)
+        print("PC: ", self.PC.cast_hex())
+        Processor.__ISA.get(self.IR.cast_hex()[:3])(self, memory_ram)
 
     def __get_value_hl__(self, memory_ram):
         '''
@@ -1168,6 +1174,7 @@ class Processor(object):
             b = np.binary_repr(memory_ram.get_celds()[self.PC.cast_hex()], 16)
             bits = b[8:] + b[0:8]
             bits = np.int16(int (bits, 2))
+            print(self.F.get_register())
             if self.F.get_register()[7] == '0':
                 self.PC.copy_from_int8(bits)
             else:
@@ -1243,7 +1250,6 @@ def loader(memory_ram, proce):
     dic = memory_ram.get_celds()
     for i in range(len(prog) - 1, -1, -1):
         ins = prog[i]
-        print(i)
         if not ins.startswith('A') and ins != '':
             value = ins.split(',')
             if proce.SP.cast_hex() == value[0]:
