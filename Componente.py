@@ -130,6 +130,16 @@ class Memory(object):
 
     def get_celds(self):
         return self.celds
+    
+    def clear(self):
+        self.celds.clear()
+    
+    def print_info(self):
+        print("Informacion celdas de memoria:")
+        for key, value in self.celds.items():
+            print("Add:   " + key, end=", ")
+            print("-> ", value)
+        print("_______________________________")
 
 class Processor(object):
     
@@ -164,7 +174,8 @@ class Processor(object):
 
     def decode(self, memory_ram):
         print("IR: ", self.IR.cast_hex())
-        Processor.__ISA.get(self.IR.cast_hex()[:3])(self, memory_ram, in_byte)
+        print("PC: ", self.PC.cast_hex())
+        Processor.__ISA.get(self.IR.cast_hex()[:3])(self, memory_ram)
 
     def __get_value_hl__(self, memory_ram):
         '''
@@ -475,9 +486,9 @@ class Processor(object):
             Se revisa cual de todas las funciones cullo OpCode comienza por 0X7
         '''
         ir_hex = self.IR.cast_hex()
-        if ir_hex[3] == '6':            # HALT
-            print("Fin del programa")
-        elif ir_hex[3] == '8':          # LD A,B
+        if ir_hex[3] == '6':        # HALT
+            self.reset(memory_ram)
+        elif ir_hex[3] == '8':        # LD A,B
             self.A.copy_from_int8(self.B.cast_int8())
         elif ir_hex[3] == '9':        # LD A,C
             self.A.copy_from_int8(self.C.cast_int8())
@@ -661,8 +672,10 @@ class Processor(object):
         '''
         ir_hex = self.IR.cast_hex()
         if ir_hex[3] == '3':            # JP nn
-            bits = hex(memory_ram.get_celds()[self.PC.cast_hex()]).upper()
-            bits = np.int16(int ('0X' + bits[4:] + bits[2:4], 16))
+            bits = list(np.binary_repr(memory_ram.get_celds()[self.PC.cast_hex()],16))
+            aux = bits[8:] 
+            aux.extend(bits[:8])
+            bits = np.int16(int ("".join(aux), 2))
             self.PC.copy_from_int8(bits)
         elif ir_hex[3] == 'B':          # Operation bits
             if ir_hex[4] == '0':        # Operation RLC r, RRC m
@@ -1009,7 +1022,7 @@ class Processor(object):
             if self.F.get_register()[0] == '0':
                 self.PC.copy_from_int8(bits)
             else:
-                new_register = self.alu.increment(self.alu, self.PC.get_register(), self.F.get_register())
+                new_register = self.alu.increment(self.alu, self.PC.cast_int8(), self.F.get_register())
                 self.PC.copy_from_int8(new_register)
         elif ir_hex[3] == '3':      # OUT A
             print(Processor.__BIN_REP__ , "".join(self.A.get_register()))
@@ -1021,7 +1034,7 @@ class Processor(object):
                 bits = np.int16(int (bits, 2))
                 self.PC.copy_from_int8(bits)
             else:
-                new_register = self.alu.increment(self.alu, self.PC.get_register(), self.F.get_register())
+                new_register = self.alu.increment(self.alu, self.PC.cast_int8(), self.F.get_register())
                 self.PC.copy_from_int8(new_register)
         elif ir_hex[3] == '4':      # CALL nc, nn
             if self.F.get_register()[0] == '0':
@@ -1119,7 +1132,7 @@ class Processor(object):
             if self.F.get_register()[2] == '0':
                 self.PC.copy_from_int8(bits)
             else:
-                new_register = self.alu.increment(self.alu, self.PC.get_register(), ['0' for _ in range(8)])
+                new_register = self.alu.increment(self.alu, self.PC.cast_int8(), self.F.get_register())
                 self.PC.copy_from_int8(new_register)
         elif ir_hex[3] == 'A':      # JP pe, nn
             if self.F.get_register()[0] == '1':
@@ -1171,7 +1184,7 @@ class Processor(object):
             if self.F.get_register()[7] == '0':
                 self.PC.copy_from_int8(bits)
             else:
-                new_register = self.alu.increment(self.alu, self.PC.get_register(), ['0' for _ in range(8)])
+                new_register = self.alu.increment(self.alu, self.PC.cast_int8(), self.F.get_register())
                 self.PC.copy_from_int8(new_register)
         elif ir_hex[3] == 'A':      # JP m, nn
             if self.F.get_register()[2] == '1':
@@ -1180,7 +1193,7 @@ class Processor(object):
                 bits = np.int16(int (bits, 2))
                 self.PC.copy_from_int8(bits)
             else:
-                new_register = self.alu.increment(self.alu, self.PC.get_register(), ['0' for _ in range(8)])
+                new_register = self.alu.increment(self.alu, self.PC.cast_int8(), self.F.get_register())
                 self.PC.copy_from_int8(new_register)
         elif ir_hex[3] == '4':      # CALL p, nn
             if self.F.get_register()[7] == '0':
@@ -1228,16 +1241,31 @@ class Processor(object):
         '0XE': e_fu,
         '0XF': f_fu
     }
+    
+    def reset(self, memory_ram):
+        self.SP.copy_from_array(["1" for _ in range(16)])        
+        self.PC.copy_from_array(["0" for _ in range(16)])        
+        self.A.copy_from_array(["0" for _ in range(16)])        
+        self.B.copy_from_array(["0" for _ in range(16)])        
+        self.C.copy_from_array(["0" for _ in range(16)])        
+        self.D.copy_from_array(["0" for _ in range(16)])        
+        self.E.copy_from_array(["0" for _ in range(16)])        
+        self.F.copy_from_array(["0" for _ in range(16)])        
+        self.H.copy_from_array(["0" for _ in range(16)])        
+        self.L.copy_from_array(["0" for _ in range(16)]) 
+        memory_ram.clear()       
 
 def loader(memory_ram, proce):
-    opt = input('Selecione que Programa desea cargar:\n[1] Program_1\n[2] Program_2\n[3] Program_3\n')
+    opt = input('Selecione que Programa desea cargar:\n[1] Program_1\n[2] Program_2\n[3] Program_3\n[4] Halt\n')
     url = 'https://raw.githubusercontent.com/josteda99/MicroProcesadorZ80/main/Programs/'
     if opt == '1':
         url += 'Program_1.csv'
     elif opt == '2':
         url += 'Program_2.csv'
-    else:
+    elif opt == '3':
         url += 'Program_3.csv'
+    else:
+        return False
     resp = requests.get(url)
     prog = resp.text.split('\n')
     dic = memory_ram.get_celds()
@@ -1254,3 +1282,4 @@ def loader(memory_ram, proce):
             else:
                 val = value[1][0: 6]
                 dic[value[0]] = np.int16(int (val, 16))
+    return True
